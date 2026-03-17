@@ -67,6 +67,9 @@
 		},
 		"brr_crystal_plate": {
 			"textures": "textures/items/refined_crystal"
+		},
+		"brr_sk_store": {
+			"textures": "textures/items/sk_store"
 		}
 	}
 }

@@ -216,6 +216,34 @@
 				}
 			]
 		},
+		"emote.saxobeat": {
+			"category": "music",
+			"max_distance": 15,
+			"min_distance": 4,
+			"__use_legacy_max_distance": true,
+			"sounds": [
+				{
+					"load_on_low_memory": false,
+					"name": "sounds/emotes/saxobeat",
+					"stream": true,
+					"volume": 1
+				}
+			]
+		},
+		"emote.saxobeat_block": {
+			"category": "block",
+			"max_distance": 15,
+			"min_distance": 4,
+			"__use_legacy_max_distance": true,
+			"sounds": [
+				{
+					"load_on_low_memory": false,
+					"name": "sounds/emotes/saxobeat_block",
+					"stream": true,
+					"volume": 1
+				}
+			]
+		},
 		"sfx.game.landmine": {
 			"category": "block",
 			"max_distance": 35,
