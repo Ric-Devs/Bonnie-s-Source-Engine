@@ -21,12 +21,12 @@ execute if score timer_m game matches 0 if score timer_s game matches 2 if score
 execute if score timer_m game matches 0 if score timer_s game matches 1 if score timer_ms game matches 20 run tellraw @a {"rawtext":[{"text": "§a§l1!"}]}
 # // beginning
 execute if score timer_s game matches 11 if score timer_ms game matches 19 if score started game matches 0 run playsound music.game.skywars @a[tag=game, tag=!music_stop]
-execute if score timer_s game matches ..0 if score started game matches 0 run structure load mystructure:release -63 -49 -63 
-execute if score timer_s game matches ..0 if score started game matches 0 run structure load mystructure:release 0 -49 -63 
-execute if score timer_s game matches ..0 if score started game matches 0 run structure load mystructure:release 0 -49 0 
-execute if score timer_s game matches ..0 if score started game matches 0 run structure load mystructure:release -63 -49 0 
+execute if score timer_s game matches ..0 if score started game matches 0 as @a[tag=game] at @s run structure load mystructure:cageD ~-2 ~-1 ~-2
 execute if score timer_s game matches ..0 if score started game matches 0 as @a[tag=game, tag=copper_airship_cageE] at @s run structure load mystructure:cageD ~-2 ~-2 ~-2
 execute if score timer_s game matches ..0 if score started game matches 0 as @a[tag=game, tag=bassalting_floater_cageE] at @s run structure load mystructure:cageD ~-2 ~-2 ~-2
+execute if score timer_s game matches ..0 if score started game matches 0 as @a[tag=game, tag=candy_land_cageE] at @s run structure load mystructure:cageD ~-2 ~-2 ~-2
+execute if score timer_s game matches ..0 if score started game matches 0 as @a[tag=game, tag=spawn_cageE] at @s run structure load mystructure:cageD ~-2 ~-2 ~-2
+execute if score timer_s game matches ..0 if score started game matches 0 as @a[tag=game, tag=up2] at @s run structure load mystructure:cageD1 ~-5 ~-3 ~-5
 execute if score timer_s game matches ..0 if score started game matches 0 if score inventory game matches 1 as @a[tag=game] at @s run function game_functions/setup/load_store_inventory
 execute if score timer_s game matches ..0 if score started game matches 0 run gamerule dotiledrops true
 execute if score timer_s game matches ..0 if score started game matches 0 run gamerule pvp true

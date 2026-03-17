@@ -28,5 +28,3 @@ tag @s add i21
 tag @s add i22
 tag @s add i23
 tag @s add i24
-
-function game_functions/map/islands

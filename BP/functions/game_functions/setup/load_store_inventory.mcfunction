@@ -97,7 +97,7 @@ execute as @s[tag=potion_invisibilityE] at @s run give @s splash_potion 1 7
 execute as @s[tag=equipment_milkE] at @s run give @s milk_bucket 1 381
 # = BLOCKS =
 # // normal ones
-execute as @s[tag=block_glassE] at @s run give @s grass_block 16
+execute as @s[tag=block_grassE] at @s run give @s grass_block 16
 execute as @s[tag=block_cobblestoneE] at @s run give @s cobblestone 16
 execute as @s[tag=block_obsidianE] at @s run give @s obsidian 16
 execute as @s[tag=vip_rgb_blocksE] at @s run give @s brr:sk_rgb_block 16
@@ -198,3 +198,9 @@ execute as @s[tag=megavip_elytraE] at @s run give @s elytra
 execute as @s[tag=megavip_maceE] at @s run give @s mace
 # = BRR TECH =
 execute as @s[tag=megavip_gluon_gunE] at @s run give @s brr:gluon_gun
+execute as @s[tag=megavip_gluon_gunE] at @s run give @s brr:gaussammo 1 
+execute as @s[tag=megavip_tau_cannonE] at @s run give @s brr:tau_cannon
+execute as @s[tag=megavip_tau_cannonE] at @s run give @s brr:gaussammo 1 100
+execute as @s[tag=brr_glock17E] at @s run give @s brr:glock17
+execute as @s[tag=brr_glock17E] at @s run give @s brr:9mmclip 1 100
+execute as @s[tag=brr_crowbar] at @s run give @s brr:crowbar

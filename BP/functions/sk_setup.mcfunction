@@ -57,6 +57,7 @@ scoreboard players set timer_m game 3
 scoreboard players set started game 0
 scoreboard players set skywars lobby 1
 scoreboard players set inventory game 1
+scoreboard players set map game 1
 # tag
 tag @s add host
 tellraw @a {"rawtext":[{"text": "§aGame setted up successfully"}]}

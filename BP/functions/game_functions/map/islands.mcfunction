@@ -50,9 +50,6 @@ execute as @e[type=brr:sk_island, name=island21] at @s run tag @s add rotation3
 execute as @e[type=brr:sk_island, name=island22] at @s run tag @s add rotation2
 execute as @e[type=brr:sk_island, name=island23] at @s run tag @s add rotation3
 execute as @e[type=brr:sk_island, name=island24] at @s run tag @s add rotation4
-# = SPECIAL ISLANDS =
-
-
 # = RANDOMIZER =
 scoreboard objectives add map dummy
 scoreboard objectives add random_rotation dummy
@@ -62,10 +59,10 @@ execute as @e[type=brr:sk_island, name=center_island, scores={random_rotation=1}
 execute as @e[type=brr:sk_island, name=center_island, scores={random_rotation=2}] at @s run tag @s add rotation2
 execute as @e[type=brr:sk_island, name=center_island, scores={random_rotation=3}] at @s run tag @s add rotation3
 execute as @e[type=brr:sk_island, name=center_island, scores={random_rotation=4}] at @s run tag @s add rotation4
-scoreboard players random special1 random_rotation 1 12
-scoreboard players random special2 random_rotation 1 12
-scoreboard players random special3 random_rotation 1 12
-scoreboard players random special4 random_rotation 1 12
+scoreboard players random special1 random_rotation 1 15
+scoreboard players random special2 random_rotation 1 15
+scoreboard players random special3 random_rotation 1 15
+scoreboard players random special4 random_rotation 1 15
 # = STRUCTURES =
 # // Center Island
 execute as @e[type=brr:sk_island, tag=rotation1, name=center_island] at @s run structure load mystructure:Center ~-3 ~4 ~-3
@@ -187,6 +184,9 @@ execute if score special1 random_rotation matches 9 run structure load mystructu
 execute if score special1 random_rotation matches 10 run structure load mystructure:Special10 13 -55 -10
 execute if score special1 random_rotation matches 11 run structure load mystructure:Special11 13 -55 -10
 execute if score special1 random_rotation matches 12 run structure load mystructure:Special12 13 -55 -10
+execute if score special1 random_rotation matches 13 run structure load mystructure:Special13 13 -55 -10
+execute if score special1 random_rotation matches 14 run structure load mystructure:Special14 13 -55 -10
+execute if score special1 random_rotation matches 15 run structure load mystructure:Special15 13 -55 -10
 # // special island 2
 structure load mystructure:Special 12 -60 9
 execute if score special2 random_rotation matches 1 run structure load mystructure:Special1 13 -55 10
@@ -201,6 +201,9 @@ execute if score special2 random_rotation matches 9 run structure load mystructu
 execute if score special2 random_rotation matches 10 run structure load mystructure:Special10 13 -55 10
 execute if score special2 random_rotation matches 11 run structure load mystructure:Special11 13 -55 10
 execute if score special2 random_rotation matches 12 run structure load mystructure:Special12 13 -55 10
+execute if score special2 random_rotation matches 13 run structure load mystructure:Special13 13 -55 10
+execute if score special2 random_rotation matches 14 run structure load mystructure:Special14 13 -55 10
+execute if score special2 random_rotation matches 15 run structure load mystructure:Special15 13 -55 10
 # // special island 3
 structure load mystructure:Special -12 -60 9
 execute if score special3 random_rotation matches 1 run structure load mystructure:Special1 -11 -55 10
@@ -215,6 +218,9 @@ execute if score special3 random_rotation matches 9 run structure load mystructu
 execute if score special3 random_rotation matches 10 run structure load mystructure:Special10 -11 -55 10
 execute if score special3 random_rotation matches 11 run structure load mystructure:Special11 -11 -55 10
 execute if score special3 random_rotation matches 12 run structure load mystructure:Special12 -11 -55 10
+execute if score special3 random_rotation matches 13 run structure load mystructure:Special13 -11 -55 10
+execute if score special3 random_rotation matches 14 run structure load mystructure:Special14 -11 -55 10
+execute if score special3 random_rotation matches 15 run structure load mystructure:Special15 -11 -55 10
 # // special island 4
 structure load mystructure:Special -12 -60 -11
 execute if score special4 random_rotation matches 1 run structure load mystructure:Special1 -11 -55 -10
@@ -229,6 +235,9 @@ execute if score special4 random_rotation matches 9 run structure load mystructu
 execute if score special4 random_rotation matches 10 run structure load mystructure:Special10 -11 -55 -10
 execute if score special4 random_rotation matches 11 run structure load mystructure:Special11 -11 -55 -10
 execute if score special4 random_rotation matches 12 run structure load mystructure:Special12 -11 -55 -10
+execute if score special4 random_rotation matches 13 run structure load mystructure:Special13 -11 -55 -10
+execute if score special4 random_rotation matches 14 run structure load mystructure:Special14 -11 -55 -10
+execute if score special4 random_rotation matches 15 run structure load mystructure:Special15 -11 -55 -10
 # = END =
 tp @e[type=brr:sk_island] 0 -128 0
 kill @e[type=brr:sk_island]

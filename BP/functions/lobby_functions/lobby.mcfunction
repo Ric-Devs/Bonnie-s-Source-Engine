@@ -48,8 +48,15 @@ execute if score game lobby matches 1 run effect @a[tag=lobby] weakness 1 255 tr
 # // store cage importants
 execute as @a[tag=copper_airship_cageE] at @s run tag @s add up1
 execute as @a[tag=bassalting_floater_cageE] at @s run tag @s add up1
-execute as @a[tag=!copper_airship_cageE] at @s run tag @s remove up1
-execute as @a[tag=!bassalting_floater_cageE] at @s run tag @s remove up1
+execute as @a[tag=candy_land_cageE] at @s run tag @s add up1
+execute as @a[tag=spawn_cageE] at @s run tag @s add up1
+
+execute as @a[tag=antimass_spectrometer_cageE] at @s run tag @s add up2
+execute as @a[tag=heavenly_cageE] at @s run tag @s add up2
+execute as @a[tag=] at @s run tag @s add up2
+
+execute as @a[tag=!copper_airship_cageE, tag=!bassalting_floater_cageE, tag=!candy_land_cageE, tag=!spawn_cageE] at @s run tag @s remove up1
+execute as @a[tag=!antimass_spectrometer_cageE, tag=!heavenly_cageE] at @s run tag @s remove up2
 # // scoreboards
 execute as @a at @s run scoreboard players operation @s coins = @s coins_storage
 execute as @a at @s run scoreboard players operation @s wins = @s win_storage
@@ -70,7 +77,9 @@ execute if score timer_s lobby matches 0 if score timer_ms lobby matches 1 run i
 execute if score timer_s lobby matches 0 if score timer_ms lobby matches 1 run scoreboard players set game lobby -1
 execute if score timer_s lobby matches 0 if score timer_ms lobby matches 1 run function game_functions/setup/players
 execute if score timer_s lobby matches 0 if score timer_ms lobby matches 1 run title @a actionbar §2Game is starting!
-execute if score timer_s lobby matches -1 if score timer_ms lobby matches 1 run function game_functions/map/islands
+execute if score timer_s lobby matches 0 if score timer_ms lobby matches 1 run scriptevent brr:vote_winner 
+execute if score timer_s lobby matches -1 if score timer_ms lobby matches 1 if score map game matches 1 run function game_functions/map/islands
+execute if score timer_s lobby matches -1 if score timer_ms lobby matches 1 if score map game matches 2 run function game_functions/map/stoneyhaven
 execute if score timer_s lobby matches -1 if score timer_ms lobby matches 1 run function game_functions/setup/player_tp
 execute if score timer_s lobby matches -1 if score timer_ms lobby matches 1 run scoreboard players set timer_s lobby 67
 # = HOST ONLY =
@@ -81,3 +90,7 @@ execute as @a[tag=host, tag=!game, tag=!spectator] at @s run gamemode c @s
 tag @a remove equipment_fishing_rod
 tag @a remove equipment_fishing_rodE
 clear @a writable_book
+#tag @a remove armor_netheriteE
+#tag @a remove armor_diamondE
+#tag @a remove armor_ironE
+effect bonnierobloxrip clear slowness

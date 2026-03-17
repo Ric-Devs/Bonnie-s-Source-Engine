@@ -38,16 +38,17 @@ setworldspawn 0 1 -1
 clearspawnpoint @a
 weather clear
 # = MAP =
-structure load mystructure:delete -63 -60 -63 0_degrees none block_by_block 5
-structure load mystructure:delete 0 -60 -63 0_degrees none block_by_block 5
-structure load mystructure:delete 0 -60 0 0_degrees none block_by_block 5
-structure load mystructure:delete -63 -60 0 0_degrees none block_by_block 5
+structure load mystructure:delete -63 -64 -63 0_degrees none block_by_block 5
+structure load mystructure:delete 0 -64 -63 0_degrees none block_by_block 5
+structure load mystructure:delete 0 -64 0 0_degrees none block_by_block 5
+structure load mystructure:delete -63 -64 0 0_degrees none block_by_block 5
 # = ENTITIES =
 kill @e[type=!minecraft:player]
 inputpermission set @a movement enabled
 camera @a clear
 camera @a fov_clear
 tp @a[tag=spectator] 0 1 -1
+tag @a remove voted
 # = SCORES =
 scoreboard objectives remove game_music
 scoreboard objectives add game_music dummy

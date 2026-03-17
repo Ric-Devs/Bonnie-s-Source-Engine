@@ -22,4 +22,5 @@ execute as @a[tag=game, x=63, y=-64, z=-63, dx=128, dy=30] at @s run function ga
 execute as @a[tag=game, x=-63, y=64, z=63, dy=30, dz=128] at @s run function game_functions/misc/out_of_bounds
 
 # // void kill zone
-execute as @a[x=-64, y=-64, z=-64, dx=128, dy=2, dz=128] at @s run kill @s
+execute as @a[x=-64, y=-64, z=-64, dx=128, dy=2, dz=128] at @s if score map game matches 1 run kill @s
+execute as @a[x=-64, y=-64, z=-64, dx=128, dz=128] at @s if score map game matches 2 run kill @s
