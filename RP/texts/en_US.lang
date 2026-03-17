@@ -4,6 +4,7 @@ tile.brr:tool_invisible.name=Invisible Tool
 
 item.brr:info_playerspawn=info_playespawn
 item.brr:info_target_areaportal=info_target_areaportal
+item.brr:game_nametag=game_nametag
 
 tile.brr:dev_measuregeneric01.name=Developer Tile 01
 tile.brr:dev_measuregeneric02.name=Developer Tile 02
@@ -20,3 +21,21 @@ tile.brr:data_blocklight.name=data_blocklight
 
 tile.brr:info_playerspawn_block.name=info_playerspawn_block
 tile.brr:info_target_areaportal_block.name=info_target_areaportal_block
+tile.brr:game_nametag_block.name=game_nametag_block
+item.brr:dino_speecher=Dino Speecher
+
+itemGroup.name.dev_decor=Developer Decoration
+itemGroup.name.tool_blocks=Tool Blocks
+itemGroup.name.logic_blocks=Logic Blocks
+tile.brr:tool_blocklight.name=Blocklight Tool
+tile.brr:tool_playerclip.name=Playerclip Tool
+tile.brr:tool_npcclip.name=NPC Clip Tool
+
+
+item.brr:gluon_gun=Gluon Gun
+item.brr:tau_cannon=Tau Cannon
+item.brr:crowbar=Crowbar
+item.brr:glock17=Glock 17
+item.brr:glock17_empty=Glock17 Empty
+item.brr:gaussammo=Gauss Ammo
+item.brr:9mmclip=9mm Clip

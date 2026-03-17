@@ -1,0 +1,271 @@
+{
+  "format_version": "1.19.0",
+  "animation_controllers": {
+    "controller.animation.tau_cannon.firstPerson": {
+      "initial_state": "fp_select_gate",
+      "states": {
+        "fp_select_gate": {
+          "transitions": [
+            {
+              "fp_draw_admire": "math.random(0.0, 1.0) < 0.25"
+            },
+            {
+              "fp_draw": "1.0"
+            }
+          ]
+        },
+        "fp_draw_admire": {
+          "animations": [
+            "fp_draw_admire"
+          ],
+          "transitions": [
+            {
+              "fp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "fp_draw": {
+          "animations": [
+            "fp_draw"
+          ],
+          "transitions": [
+            {
+              "fp_charge": "query.is_using_item"
+            },
+            {
+              "fp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "fp_idle": {
+          "animations": [
+            "fp_idle"
+          ],
+          "transitions": [
+            {
+              "fp_charge": "query.is_using_item"
+            },
+            {
+              "fp_idle_fidget": "query.anim_time >= 10.0 && math.random(0.0, 1.0) < 0.001"
+            }
+          ]
+        },
+        "fp_idle_fidget": {
+          "animations": [
+            "fp_idle_fidget"
+          ],
+          "transitions": [
+            {
+              "fp_charge": "query.is_using_item"
+            },
+            {
+              "fp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "fp_fire1": {
+          "animations": [
+            "fp_fire1"
+          ],
+          "transitions": [
+            {
+              "fp_charge": "query.is_using_item"
+            },
+            {
+              "fp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "fp_fire2": {
+          "animations": [
+            "fp_fire2"
+          ],
+          "transitions": [
+            {
+              "fp_charge": "query.is_using_item"
+            },
+            {
+              "fp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "fp_charge": {
+          "animations": [
+            "fp_charge"
+          ],
+          "transitions": [
+            {
+              "fp_fire_gate": "!query.is_using_item"
+            },
+            {
+              "fp_charged": "query.is_using_item && query.any_animation_finished"
+            }
+          ]
+        },
+        "fp_fire_gate": {
+          "transitions": [
+            {
+              "fp_fire1": "math.random(0.0, 1.0) < 0.5"
+            },
+            {
+              "fp_fire2": "1.0"
+            }
+          ]
+        },
+        "fp_charged": {
+          "animations": [
+            "fp_charged"
+          ],
+          "transitions": [
+            {
+              "fp_charged_fire": "!query.is_using_item"
+            }
+          ]
+        },
+        "fp_charged_fire": {
+          "animations": [
+            "fp_charged_fire"
+          ],
+          "transitions": [
+            {
+              "fp_idle": "query.any_animation_finished"
+            }
+          ]
+        }
+      }
+    },
+    "controller.animation.tau_cannon.thirdPerson": {
+      "initial_state": "tp_select_gate",
+      "states": {
+        "tp_select_gate": {
+          "transitions": [
+            {
+              "tp_draw_admire": "math.random(0.0, 1.0) < 0.25"
+            },
+            {
+              "tp_draw": "1.0"
+            }
+          ]
+        },
+        "tp_draw_admire": {
+          "animations": [
+            "tp_draw_admire"
+          ],
+          "transitions": [
+            {
+              "tp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "tp_draw": {
+          "animations": [
+            "tp_draw"
+          ],
+          "transitions": [
+            {
+              "tp_charge": "query.is_using_item"
+            },
+            {
+              "tp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "tp_idle": {
+          "animations": [
+            "tp_idle"
+          ],
+          "transitions": [
+            {
+              "tp_charge": "query.is_using_item"
+            },
+            {
+              "tp_idle_fidget": "query.anim_time >= 10.0 && math.random(0.0, 1.0) < 0.001"
+            }
+          ]
+        },
+        "tp_idle_fidget": {
+          "animations": [
+            "tp_idle_fidget"
+          ],
+          "transitions": [
+            {
+              "tp_charge": "query.is_using_item"
+            },
+            {
+              "tp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "tp_fire1": {
+          "animations": [
+            "tp_fire1"
+          ],
+          "transitions": [
+            {
+              "tp_charge": "query.is_using_item"
+            },
+            {
+              "tp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "tp_fire2": {
+          "animations": [
+            "tp_fire2"
+          ],
+          "transitions": [
+            {
+              "tp_charge": "query.is_using_item"
+            },
+            {
+              "tp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "tp_charge": {
+          "animations": [
+            "tp_charge"
+          ],
+          "transitions": [
+            {
+              "tp_fire_gate": "!query.is_using_item"
+            },
+            {
+              "tp_charged": "query.is_using_item && query.any_animation_finished"
+            }
+          ]
+        },
+        "tp_fire_gate": {
+          "transitions": [
+            {
+              "tp_fire1": "math.random(0.0, 1.0) < 0.5"
+            },
+            {
+              "tp_fire2": "1.0"
+            }
+          ]
+        },
+        "tp_charged": {
+          "animations": [
+            "tp_charged"
+          ],
+          "transitions": [
+            {
+              "tp_charged_fire": "!query.is_using_item"
+            }
+          ]
+        },
+        "tp_charged_fire": {
+          "animations": [
+            "tp_charged_fire"
+          ],
+          "transitions": [
+            {
+              "tp_idle": "query.any_animation_finished"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

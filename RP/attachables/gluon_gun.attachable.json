@@ -1,0 +1,48 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "brr:gluon_gun",
+      "materials": {
+        "default": "entity_alphatest",
+        "enchanted": "entity_alphatest_glint"
+      },
+      "textures": {
+        "default": "textures/models/gluon_gun",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.gluon_gun"
+      },
+      "animations": {
+        "fp_controller": "controller.animation.gluon_gun.firstPerson",
+        "tp_controller": "controller.animation.gluon_gun.thirdPerson",
+        "fp_draw_admire": "animation.gluon_gun.draw_admire",
+        "fp_idle": "animation.gluon_gun.idle1",
+        "fp_draw": "animation.gluon_gun.draw1",
+        "fp_idle_fidget": "animation.gluon_gun.idle_fidget",
+        "fp_fire": "animation.gluon_gun.fire1",
+        "fp_fire_end": "animation.gluon_gun.fire_end",
+        "tp_draw_admire": "animation.gluon_gun.draw_admire2",
+        "tp_idle": "animation.gluon_gun.idle2",
+        "tp_draw": "animation.gluon_gun.draw2",
+        "tp_idle_fidget": "animation.gluon_gun.idle_fidget_tp",
+        "tp_fire": "animation.gluon_gun.fire2",
+        "tp_fire_end": "animation.gluon_gun.fire_end_tp"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "fp_controller": "c.is_first_person"
+          },
+          {
+            "tp_controller": "!c.is_first_person"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.item_default"
+      ]
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "brr:glock17",
+      "materials": {
+        "default": "entity_alphatest",
+        "enchanted": "entity_alphatest_glint"
+      },
+      "textures": {
+        "default": "textures/models/glock17",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.glock17"
+      },
+      "animations": {
+        "fp_controller": "controller.animation.glock17.firstPerson",
+        "tp_controller": "controller.animation.glock17.thirdPerson",
+        "fp_idle": "animation.glock17.idle",
+        "fp_draw": "animation.glock17.draw",
+        "fp_draw_admire": "animation.glock17.draw_admire",
+        "fp_fire1": "animation.glock17.fire1",
+        "fp_fire2": "animation.glock17.fire2",
+        "fp_fire_empty": "animation.glock17.fire_empty",
+        "fp_idle_fidget": "animation.glock17.idle_fidget",
+        "fp_reload": "animation.glock17.reload",
+        "fp_reload_empty": "animation.glock17.reload_empty",
+        "fp_idle_empty": "animation.glock17.idle_empty",
+        "tp_idle": "animation.glock17.tp_idle",
+        "tp_draw": "animation.glock17.tp_draw",
+        "tp_draw_admire": "animation.glock17.tp_draw_admire",
+        "tp_fire1": "animation.glock17.tp_fire1",
+        "tp_fire2": "animation.glock17.tp_fire2",
+        "tp_fire_empty": "animation.glock17.tp_fire_empty",
+        "tp_idle_fidget": "animation.glock17.tp_idle_fidget",
+        "tp_reload": "animation.glock17.tp_reload",
+        "tp_reload_empty": "animation.glock17.tp_reload_empty",
+        "tp_idle_empty": "animation.glock17.tp_idle_empty"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "fp_controller": "c.is_first_person"
+          },
+          {
+            "tp_controller": "!c.is_first_person"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.item_default"
+      ]
+    }
+  }
+}

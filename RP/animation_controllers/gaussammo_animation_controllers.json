@@ -1,0 +1,25 @@
+{
+    "format_version": "1.19.0",
+    "animation_controllers": {
+        "controller.animation.gaussammo.firstPerson": {
+            "initial_state": "fp_idle",
+            "states": {
+                "fp_idle": {
+                    "animations": [
+                        "fp_hold"
+                    ]
+                }
+            }
+        },
+        "controller.animation.gaussammo.thirdPerson": {
+            "initial_state": "tp_idle",
+            "states": {
+                "tp_idle": {
+                    "animations": [
+                        "tp_hold"
+                    ]
+                }
+            }
+        }
+    }
+}

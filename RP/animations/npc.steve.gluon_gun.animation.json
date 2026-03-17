@@ -1,0 +1,636 @@
+{
+    "format_version": "1.8.0",
+    "animations": {
+        "animation.npc.steve.egon_idle": {
+            "loop": true,
+            "animation_length": 2,
+            "bones": {
+                "leftArm": {
+                    "rotation": {
+                        "0.0": {
+                            "post": [
+                                -34.48418,
+                                -1.07444,
+                                15.81302
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.4583": {
+                            "post": [
+                                -37.38011,
+                                0.48041,
+                                14.40481
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "1.0": {
+                            "post": [
+                                -36.5526,
+                                4.29393,
+                                11.20782
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "2.0": {
+                            "post": [
+                                -34.48418,
+                                -1.07444,
+                                15.81302
+                            ],
+                            "lerp_mode": "catmullrom"
+                        }
+                    },
+                    "position": {
+                        "0.0": {
+                            "post": [
+                                -3,
+                                -3,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "1.0": {
+                            "post": [
+                                -3,
+                                -3.5,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "1.5": {
+                            "post": [
+                                -3,
+                                -3.45,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "2.0": {
+                            "post": [
+                                -3,
+                                -3,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        }
+                    }
+                }
+            }
+        },
+        "animation.npc.steve.egon_draw_admire": {
+            "animation_length": 3.5,
+            "bones": {
+                "leftArm": {
+                    "rotation": {
+                        "0.0": {
+                            "post": [
+                                0,
+                                0,
+                                0
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.5": {
+                            "post": [
+                                0,
+                                0,
+                                0
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "1.25": {
+                            "post": [
+                                -60.42435,
+                                9.23828,
+                                -8.45626
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "1.75": {
+                            "post": [
+                                -34.48418,
+                                -1.07444,
+                                15.81302
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "2.5": {
+                            "post": [
+                                -46.89637,
+                                -0.89325,
+                                18.93535
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "3.5": {
+                            "post": [
+                                -34.48418,
+                                -1.07444,
+                                15.81302
+                            ],
+                            "lerp_mode": "catmullrom"
+                        }
+                    },
+                    "position": {
+                        "0.0": {
+                            "post": [
+                                0,
+                                0,
+                                0
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.5": {
+                            "post": [
+                                0,
+                                0,
+                                0
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "1.25": {
+                            "post": [
+                                -3.76,
+                                -1.64,
+                                -3.47
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "1.75": {
+                            "post": [
+                                -3,
+                                -3,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "2.5": {
+                            "post": [
+                                -4.5,
+                                -6.2,
+                                -4.3
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "3.5": {
+                            "post": [
+                                -3,
+                                -3,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        }
+                    }
+                }
+            }
+        },
+        "animation.npc.steve.egon_draw": {
+            "animation_length": 0.75,
+            "bones": {
+                "leftArm": {
+                    "rotation": {
+                        "0.0": {
+                            "post": [
+                                -27.17676,
+                                -11.32319,
+                                -0.28534
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.375": {
+                            "post": [
+                                -54.46953,
+                                16.09414,
+                                23.15348
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.75": {
+                            "post": [
+                                -34.48418,
+                                -1.07444,
+                                15.81302
+                            ],
+                            "lerp_mode": "catmullrom"
+                        }
+                    },
+                    "position": {
+                        "0.0": {
+                            "post": [
+                                -3.7,
+                                -5.2,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.375": {
+                            "post": [
+                                -1.65,
+                                -4.1,
+                                -5.9
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.75": {
+                            "post": [
+                                -3,
+                                -3,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        }
+                    }
+                }
+            }
+        },
+        "animation.npc.steve.egon_idle_fidget": {
+            "animation_length": 4,
+            "bones": {
+                "leftArm": {
+                    "rotation": {
+                        "0.0": {
+                            "post": [
+                                -34.48418,
+                                -1.07444,
+                                15.81302
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.375": {
+                            "post": [
+                                -42.54148,
+                                -2.41426,
+                                25.77884
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.75": {
+                            "post": [
+                                -34.30485,
+                                -3.90011,
+                                11.68371
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "1.5": {
+                            "post": [
+                                -47.97265,
+                                -28.65989,
+                                30.18341
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "2.25": {
+                            "post": [
+                                -47.97265,
+                                -28.65989,
+                                30.18341
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "3.0": {
+                            "post": [
+                                -44.27605,
+                                -13.25775,
+                                22.29131
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "3.5": {
+                            "post": [
+                                -34.01378,
+                                -6.14672,
+                                8.36124
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "4.0": {
+                            "post": [
+                                -34.48418,
+                                -1.07444,
+                                15.81302
+                            ],
+                            "lerp_mode": "catmullrom"
+                        }
+                    },
+                    "position": {
+                        "0.0": {
+                            "post": [
+                                -3,
+                                -3,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.375": {
+                            "post": [
+                                -2.5,
+                                -4.05,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.75": {
+                            "post": [
+                                -3,
+                                -2.3,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "1.5": {
+                            "post": [
+                                -4.4,
+                                -6.9,
+                                -2.5
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "2.25": {
+                            "post": [
+                                -4.4,
+                                -6.9,
+                                -2.5
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "3.0": {
+                            "post": [
+                                -1.6,
+                                -5.5,
+                                -2.5
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "3.5": {
+                            "post": [
+                                -2.5,
+                                -4.1,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "4.0": {
+                            "post": [
+                                -3,
+                                -3,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        }
+                    }
+                }
+            }
+        },
+        "animation.npc.steve.egon_fire": {
+            "loop": true,
+            "animation_length": 2,
+            "bones": {
+                "leftArm": {
+                    "rotation": {
+                        "0.0": {
+                            "post": [
+                                -39.98418,
+                                -1.07444,
+                                15.81302
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.25": {
+                            "post": [
+                                -40.29484,
+                                6.57842,
+                                9.36385
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.5": {
+                            "post": [
+                                -35.58647,
+                                -8.49157,
+                                22.12052
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.75": {
+                            "post": [
+                                -42.87607,
+                                -1.57689,
+                                29.21833
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "1.0": {
+                            "post": [
+                                -39.98418,
+                                -1.07444,
+                                15.81302
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "1.25": {
+                            "post": [
+                                -37.95004,
+                                16.07772,
+                                21.21932
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "1.5": {
+                            "post": [
+                                -35.58647,
+                                -8.49157,
+                                22.12052
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "1.75": {
+                            "post": [
+                                -42.87607,
+                                -1.57689,
+                                29.21833
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "2.0": {
+                            "post": [
+                                -39.98418,
+                                -1.07444,
+                                15.81302
+                            ],
+                            "lerp_mode": "catmullrom"
+                        }
+                    },
+                    "position": {
+                        "0.0": {
+                            "post": [
+                                -3,
+                                -3.7,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.5": {
+                            "post": [
+                                -3,
+                                -4.7,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.75": {
+                            "post": [
+                                -0.44,
+                                -5.26,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "1.0": {
+                            "post": [
+                                -2,
+                                -3.7,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "1.25": {
+                            "post": [
+                                -2.76,
+                                -4.07,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "1.5": {
+                            "post": [
+                                -5,
+                                -4.7,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "1.75": {
+                            "post": [
+                                -1.87,
+                                -5.29,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "2.0": {
+                            "post": [
+                                -3,
+                                -3.7,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        }
+                    }
+                }
+            }
+        },
+        "animation.npc.steve.egon_fire_end": {
+            "animation_length": 1,
+            "bones": {
+                "leftArm": {
+                    "rotation": {
+                        "0.0": {
+                            "post": [
+                                -39.98418,
+                                -1.07444,
+                                15.81302
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.25": {
+                            "post": [
+                                -55.53201,
+                                19.70071,
+                                -2.5572
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.4167": {
+                            "post": [
+                                -61.59965,
+                                17.82445,
+                                4.28503
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.625": {
+                            "post": [
+                                -42.8597,
+                                10.55507,
+                                16.20355
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "1.0": {
+                            "post": [
+                                -34.48418,
+                                -1.07444,
+                                15.81302
+                            ],
+                            "lerp_mode": "catmullrom"
+                        }
+                    },
+                    "position": {
+                        "0.0": {
+                            "post": [
+                                -3,
+                                -3.7,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.25": {
+                            "post": [
+                                -3.6,
+                                -3.7,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "0.625": {
+                            "post": [
+                                -3.34,
+                                -5.35,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        },
+                        "1.0": {
+                            "post": [
+                                -3,
+                                -3,
+                                -4
+                            ],
+                            "lerp_mode": "catmullrom"
+                        }
+                    }
+                }
+            }
+        },
+        "animation.npc.steve.egon_player_pose": {
+            "loop": true,
+            "bones": {
+                "leftarm": {
+                    "rotation": [
+                        "-34.0 + math.sin(query.life_time * 90.0) * 1.5",
+                        "4.0 + math.cos(query.life_time * 70.0) * 1.2",
+                        "14.0"
+                    ]
+                },
+                "rightarm": {
+                    "rotation": [
+                        "-62.0 + math.sin(query.life_time * 90.0) * 1.1",
+                        "-18.0",
+                        "2.0"
+                    ]
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,60 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "brr:crowbar",
+      "materials": {
+        "default": "entity_alphatest",
+        "enchanted": "entity_alphatest_glint"
+      },
+      "textures": {
+        "default": "textures/models/crowbar",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.crowbar"
+      },
+      "animations": {
+        "fp_controller": "controller.animation.crowbar.firstPerson",
+        "tp_controller": "controller.animation.crowbar.thirdPerson",
+        "fp_idle": "animation.crowbar.idle",
+        "fp_draw1": "animation.crowbar.draw1",
+        "fp_draw2": "animation.crowbar.draw2",
+        "fp_draw_admire": "animation.crowbar.draw_admire",
+        "fp_attack1_hit": "animation.crowbar.attack1_hit",
+        "fp_attack2_hit": "animation.crowbar.attack2_hit",
+        "fp_attack3_hit": "animation.crowbar.attack3_hit",
+        "fp_attack4_hit": "animation.crowbar.attack4_hit",
+        "fp_attack1_miss": "animation.crowbar.attack1_miss",
+        "fp_attack2_miss": "animation.crowbar.attack2_miss",
+        "fp_attack3_miss": "animation.crowbar.attack3_miss",
+        "fp_attack4_miss": "animation.crowbar.attack4_miss",
+        "tp_idle": "animation.crowbar.tp_idle",
+        "tp_draw1": "animation.crowbar.tp_draw1",
+        "tp_draw2": "animation.crowbar.tp_draw2",
+        "tp_draw_admire": "animation.crowbar.tp_draw_admire",
+        "tp_attack1_hit": "animation.crowbar.tp_attack1_hit",
+        "tp_attack2_hit": "animation.crowbar.tp_attack2_hit",
+        "tp_attack3_hit": "animation.crowbar.tp_attack3_hit",
+        "tp_attack4_hit": "animation.crowbar.tp_attack4_hit",
+        "tp_attack1_miss": "animation.crowbar.tp_attack1_miss",
+        "tp_attack2_miss": "animation.crowbar.tp_attack2_miss",
+        "tp_attack3_miss": "animation.crowbar.tp_attack3_miss",
+        "tp_attack4_miss": "animation.crowbar.tp_attack4_miss"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "fp_controller": "c.is_first_person"
+          },
+          {
+            "tp_controller": "!c.is_first_person"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.item_default"
+      ]
+    }
+  }
+}

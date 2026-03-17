@@ -1,0 +1,473 @@
+{
+    "format_version": "1.14.0",
+    "sound_definitions": {
+        "weapons.egon_fire": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/egon_fire",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.egon_fire_start": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/egon_fire_start",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.egon_fire_end": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/egon_fire_end",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.egon_hit1": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/egon_hit1",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.egon_hit2": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/egon_hit2",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.egon_hit3": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/egon_hit3",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.egon_hit4": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/egon_hit4",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.egon_hit5": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/egon_hit5",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.gauss.charged": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/gauss_charged",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.gauss.draw_admire": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/gauss_draw_admire",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.gauss.empty": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/gauss_empty",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.gauss.fire1": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/gauss_fire1",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.gauss.fire2": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/gauss_fire2",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.gauss.fire3": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/gauss_fire3",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.gauss.fire4": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/gauss_fire4",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.gauss.idle_fidget": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/gauss_idle_fidget",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.gauss.overcharged": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/gauss_overcharged",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.gauss.overcharged_fire1": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/gauss_overcharged1",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.gauss.overcharged_fire2": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/gauss_overcharged2",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.gauss.overcharged_fire3": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/gauss_overcharged_fire3",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.gauss.overcharging": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/gauss_overcharging",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.gauss.spin_loop": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/gauss_spin_loop",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.gauss.spinup": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/gauss_spinup",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.gauss.undercharge": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/gauss_undercharge",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.crowbar.hit1": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/crowbar_hit1",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.crowbar.hit2": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/crowbar_hit2",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.crowbar.hit3": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/crowbar_hit3",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.crowbar.miss1": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/crowbar_miss1",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.crowbar.miss2": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/crowbar_miss2",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.crowbar.miss3": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/crowbar_miss3",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.glock.draw_admire": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/glock_draw_admire",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.glock.empty": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/glock_empty",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.glock.fire": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/glock_fire",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.glock.idle_fidget": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/glock_idle_fidget",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.glock.reload_empty": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/glock_reload_empty",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.glock.reload": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/glock_reload",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,243 @@
+{
+  "format_version": "1.19.0",
+  "animation_controllers": {
+    "controller.animation.glock17.firstPerson": {
+      "initial_state": "fp_select_gate",
+      "states": {
+        "fp_select_gate": {
+          "transitions": [
+            {
+              "fp_draw_admire": "math.random(0.0, 1.0) < 0.12"
+            },
+            {
+              "fp_draw": "1.0"
+            }
+          ]
+        },
+        "fp_draw_admire": {
+          "animations": [
+            "fp_draw_admire"
+          ],
+          "transitions": [
+            {
+              "fp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "fp_draw": {
+          "animations": [
+            "fp_draw"
+          ],
+          "transitions": [
+            {
+              "fp_fire_gate": "query.is_using_item && !query.is_sneaking"
+            },
+            {
+              "fp_reload": "query.is_using_item && query.is_sneaking"
+            },
+            {
+              "fp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "fp_idle": {
+          "animations": [
+            "fp_idle"
+          ],
+          "transitions": [
+            {
+              "fp_fire_gate": "query.is_using_item && !query.is_sneaking"
+            },
+            {
+              "fp_reload": "query.is_using_item && query.is_sneaking"
+            },
+            {
+              "fp_idle_fidget": "query.anim_time >= 10.0 && math.random(0.0, 1.0) < 0.001"
+            }
+          ]
+        },
+        "fp_idle_fidget": {
+          "animations": [
+            "fp_idle_fidget"
+          ],
+          "transitions": [
+            {
+              "fp_fire_gate": "query.is_using_item && !query.is_sneaking"
+            },
+            {
+              "fp_reload": "query.is_using_item && query.is_sneaking"
+            },
+            {
+              "fp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "fp_fire_gate": {
+          "transitions": [
+            {
+              "fp_fire1": "math.random(0.0, 1.0) < 0.5"
+            },
+            {
+              "fp_fire2": "1.0"
+            }
+          ]
+        },
+        "fp_fire1": {
+          "animations": [
+            "fp_fire1"
+          ],
+          "transitions": [
+            {
+              "fp_fire_gate": "query.any_animation_finished && query.is_using_item && !query.is_sneaking"
+            },
+            {
+              "fp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "fp_fire2": {
+          "animations": [
+            "fp_fire2"
+          ],
+          "transitions": [
+            {
+              "fp_fire_gate": "query.any_animation_finished && query.is_using_item && !query.is_sneaking"
+            },
+            {
+              "fp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "fp_reload": {
+          "animations": [
+            "fp_reload"
+          ],
+          "transitions": [
+            {
+              "fp_idle": "query.any_animation_finished"
+            }
+          ]
+        }
+      }
+    },
+    "controller.animation.glock17.thirdPerson": {
+      "initial_state": "tp_select_gate",
+      "states": {
+        "tp_select_gate": {
+          "transitions": [
+            {
+              "tp_draw_admire": "math.random(0.0, 1.0) < 0.12"
+            },
+            {
+              "tp_draw": "1.0"
+            }
+          ]
+        },
+        "tp_draw_admire": {
+          "animations": [
+            "tp_draw_admire"
+          ],
+          "transitions": [
+            {
+              "tp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "tp_draw": {
+          "animations": [
+            "tp_draw"
+          ],
+          "transitions": [
+            {
+              "tp_fire_gate": "query.is_using_item && !query.is_sneaking"
+            },
+            {
+              "tp_reload": "query.is_using_item && query.is_sneaking"
+            },
+            {
+              "tp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "tp_idle": {
+          "animations": [
+            "tp_idle"
+          ],
+          "transitions": [
+            {
+              "tp_fire_gate": "query.is_using_item && !query.is_sneaking"
+            },
+            {
+              "tp_reload": "query.is_using_item && query.is_sneaking"
+            },
+            {
+              "tp_idle_fidget": "query.anim_time >= 10.0 && math.random(0.0, 1.0) < 0.001"
+            }
+          ]
+        },
+        "tp_idle_fidget": {
+          "animations": [
+            "tp_idle_fidget"
+          ],
+          "transitions": [
+            {
+              "tp_fire_gate": "query.is_using_item && !query.is_sneaking"
+            },
+            {
+              "tp_reload": "query.is_using_item && query.is_sneaking"
+            },
+            {
+              "tp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "tp_fire_gate": {
+          "transitions": [
+            {
+              "tp_fire1": "math.random(0.0, 1.0) < 0.5"
+            },
+            {
+              "tp_fire2": "1.0"
+            }
+          ]
+        },
+        "tp_fire1": {
+          "animations": [
+            "tp_fire1"
+          ],
+          "transitions": [
+            {
+              "tp_fire_gate": "query.any_animation_finished && query.is_using_item && !query.is_sneaking"
+            },
+            {
+              "tp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "tp_fire2": {
+          "animations": [
+            "tp_fire2"
+          ],
+          "transitions": [
+            {
+              "tp_fire_gate": "query.any_animation_finished && query.is_using_item && !query.is_sneaking"
+            },
+            {
+              "tp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "tp_reload": {
+          "animations": [
+            "tp_reload"
+          ],
+          "transitions": [
+            {
+              "tp_idle": "query.any_animation_finished"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
