@@ -1,32 +1,46 @@
-import { world, system, CommandPermissionLevel, CustomCommandParamType } from "@minecraft/server";
-import "./handler/chat_system.js";
+import * as mc from "@minecraft/server";
+import { applyEmojiReplacements } from "./handler/chat_system.js";
 import { evaluateCondition, validateConditionRequirements } from "./handler/condition_executer.js";
 import { conditionTools } from "./tool_ui/conditions_tools.js";
 import { areaPortalToolUI, handleAreaPortalBlock } from "./tool_ui/tool_areaportal.js";
 import { infoPlayerspawnUI, getPlayerspawnSpawnConfig, getActivePlayerspawnBlocks, applySpawnPointForPlayer, applyWorldSpawnPoint } from "./tool_ui/info_playerspawn.js";
 import { infoTargetAreaportalUI } from "./tool_ui/info_target_areaportal.js";
+import { gameNametagUI, getGameNametagTargets } from "./tool_ui/game_nametag.js";
 import { toolInvisibleUI, getHiddenPlaceholderType } from "./tool_ui/tool_invisible.js";
 import { toolPlayerclipUI, applyPlayerclipRepel } from "./tool_ui/tool_playerclip.js";
-import { toolNpcclipUI, shouldEnableNpcclipCollision } from "./tool_ui/tool_npcclip.js";
+import { toolNpcclipUI, shouldEnableNpcclipCollision, applyNpcclipRepel } from "./tool_ui/tool_npcclip.js";
 import { triggerToolUI as showTriggerToolUI, fireOutputsForEvent, getNormalizedTriggerData, isBlockedTriggerCommand } from "./tool_ui/tool_trigger.js";
 import { blockParticles } from "./handler/block_particles.js";
+import "./handler/gluon_gun.js";
+import "./handler/tau_cannon.js";
+import "./handler/crowbar.js";
+import "./handler/glock17.js";
+
+const { world, system } = mc;
+const CommandPermissionLevel = mc.CommandPermissionLevel;
+const CustomCommandParamType = mc.CustomCommandParamType;
 
 // SECTION: Global State & Constants
 let visible = false;
 let toolsEnabled = true;
 const PLAYERCLIP_PUSH_COOLDOWN_MS = 140;
+const NPCCLIP_REPEL_COOLDOWN_MS = 140;
 const TRIGGER_INTERACT_COOLDOWN_MS = 500;
 const playerclipPushCooldowns = new Map();
-const TOOL_BLOCK_TYPES = ["brr:tool_areaportal", "brr:info_playerspawn_block", "brr:tool_invisible", "brr:tool_trigger", "brr:info_target_areaportal_block", "brr:tool_blocklight", "brr:tool_playerclip", "brr:tool_npcclip"];
+const playerclipLastSafePositions = new Map();
+const npcclipRepelCooldowns = new Map();
+const npcclipLastSafePositions = new Map();
+const TOOL_BLOCK_TYPES = ["brr:tool_areaportal", "brr:info_playerspawn_block", "brr:tool_invisible", "brr:tool_trigger", "brr:info_target_areaportal_block", "brr:tool_blocklight", "brr:tool_playerclip", "brr:tool_npcclip", "brr:game_nametag_block"];
 const COLLISION_BLOCK_TYPES = ["brr:tool_invisible", "brr:tool_playerclip", "brr:tool_npcclip"];
 const LIGHT_BLOCK_TYPES = ["brr:tool_blocklight"];
 const ITEM_TO_BLOCK_MAP = {
     "brr:info_playerspawn": "brr:info_playerspawn_block",
-    "brr:info_target_areaportal": "brr:info_target_areaportal_block"
+    "brr:info_target_areaportal": "brr:info_target_areaportal_block",
+    "brr:game_nametag": "brr:game_nametag_block"
 };
 const MAX_SIZE = 28000;
 const TRIGGER_OUTPUT_TYPES = ["onTrue", "onFalse"];
-const TRIGGER_INPUTS = ["startDisabled", "selector", "destination", "destinationBlock", "worldSpawnAtBlock", "worldSpawn", "executeOnConditon", "triggerConditionValue1", "triggerConditionValue2", "triggerConditionValue3", "runCommand", "playerclipExcludeOperators", "playerclipExcludeGamemode", "playerclipExcludeSelector", "npcclipExcludeSelector"];
+const TRIGGER_INPUTS = ["startDisabled", "selector", "destination", "destinationBlock", "targetFacingDirection", "worldSpawnAtBlock", "worldSpawn", "executeOnConditon", "triggerConditionValue1", "triggerConditionValue2", "triggerConditionValue3", "runCommand", "playerclipExcludeOperators", "playerclipExcludeGamemode", "playerclipExcludeSelector", "npcclipExcludeSelector", "worksInUsernames", "worksInChat", "suffix", "prefix", "nametag", "nametagOrder", "selectors"];
 const ADJACENT_DIRECTIONS = [
     { x: 0, y: 1, z: 0 },
     { x: 0, y: -1, z: 0 },
@@ -119,6 +133,12 @@ function isPlayerInCreative(player) {
 
 function isPlayerOperator(player) {
     if (!player) return false;
+
+    if (typeof player.isOp === "function") {
+        try {
+            return Boolean(player.isOp());
+        } catch { }
+    }
 
     try {
         return (player.runCommand("testfor @s[haspermission={operator=true}]")?.successCount ?? 0) > 0;
@@ -294,43 +314,59 @@ world.afterEvents.playerPlaceBlock.subscribe((data) => {
             groupId: newGroupId,
             data: { ...sharedData, startDisabled: false }
         });
+
+        if (block.typeId === "brr:tool_playerclip") {
+            const newIndex = blocks.length - 1;
+            if (blocks[newIndex]?.data?.excludeOperators === undefined) {
+                blocks[newIndex].data.excludeOperators = true;
+            }
+        }
+
         saveLargeJSON("blocks", blocks);
     }
 })
 
 // SECTION: Startup Commands & Persisted Toggles
-system.beforeEvents.startup.subscribe((data) => {
-    const commandsList = ["engine_blocks_always_visible", "tools_enabled"]
+try {
+    if (system?.beforeEvents?.startup && CommandPermissionLevel && CustomCommandParamType) {
+        system.beforeEvents.startup.subscribe((data) => {
+            const registry = data?.customCommandRegistry;
+            if (!registry) return;
 
-    data.customCommandRegistry.registerEnum("brr:cmds", commandsList)
-    data.customCommandRegistry.registerCommand(
-        {
-            name: "brr:brr",
-            description: "Bonnie's Source Engine Settings",
-            permissionLevel: CommandPermissionLevel.GameDirectors,
-            mandatoryParameters: [
-                { name: "brr:cmds", type: CustomCommandParamType.Enum },
-                { name: "value", type: CustomCommandParamType.Boolean }
-            ],
-        },
-        (origin, subcommand, value) => {
-            const sender = origin.sourceEntity;
-            if (!sender) return;
+            const commandsList = ["engine_blocks_always_visible", "tools_enabled"];
 
-            if (subcommand === "engine_blocks_always_visible") {
-                visible = value ?? false;
-                world.setDynamicProperty("engine_blocks_always_visible", visible);
-                sender.sendMessage(`Toggled tool blocks visibility to ${visible}`);
-                return;
-            } else if (subcommand === "tools_enabled") {
-                toolsEnabled = value ?? false;
-                world.setDynamicProperty("tools_enabled", toolsEnabled);
-                sender.sendMessage(`Toggled tools to ${toolsEnabled}`);
-                return;
-            }
-        }
-    );
-});
+            registry.registerEnum("brr:cmds", commandsList);
+            registry.registerCommand(
+                {
+                    name: "brr:brr",
+                    description: "Bonnie's Source Engine Settings",
+                    permissionLevel: CommandPermissionLevel.GameDirectors,
+                    mandatoryParameters: [
+                        { name: "brr:cmds", type: CustomCommandParamType.Enum },
+                        { name: "value", type: CustomCommandParamType.Boolean }
+                    ],
+                },
+                (origin, subcommand, value) => {
+                    const sender = origin.sourceEntity;
+                    if (!sender) return;
+
+                    if (subcommand === "engine_blocks_always_visible") {
+                        visible = value ?? false;
+                        world.setDynamicProperty("engine_blocks_always_visible", visible);
+                        sender.sendMessage(`Toggled tool blocks visibility to ${visible}`);
+                        return;
+                    }
+
+                    if (subcommand === "tools_enabled") {
+                        toolsEnabled = value ?? false;
+                        world.setDynamicProperty("tools_enabled", toolsEnabled);
+                        sender.sendMessage(`Toggled tools to ${toolsEnabled}`);
+                    }
+                }
+            );
+        });
+    }
+} catch { }
 
 system.run(() => {
     visible = parseBooleanLike(world.getDynamicProperty("engine_blocks_always_visible"), false);
@@ -590,7 +626,19 @@ function getPlayerclipRuntimeOptions() {
         getPlayerGameMode,
         ...getSelectorRuntimeOptions(),
         playerclipPushCooldowns,
+        playerclipLastSafePositions,
         cooldownMs: PLAYERCLIP_PUSH_COOLDOWN_MS
+    };
+}
+
+function getNpcclipRepelRuntimeOptions() {
+    return {
+        parseBooleanLike,
+        isEntityNearBlock,
+        ...getSelectorRuntimeOptions(),
+        npcclipRepelCooldowns,
+        npcclipLastSafePositions,
+        cooldownMs: NPCCLIP_REPEL_COOLDOWN_MS
     };
 }
 
@@ -625,6 +673,7 @@ function openToolUIForBlock(player, blockEntry) {
         "brr:tool_areaportal": areaPortalToolUI,
         "brr:info_playerspawn_block": infoPlayerspawnUI,
         "brr:info_target_areaportal_block": infoTargetAreaportalUI,
+        "brr:game_nametag_block": gameNametagUI,
         "brr:tool_invisible": toolInvisibleUI,
         "brr:tool_playerclip": toolPlayerclipUI,
         "brr:tool_npcclip": toolNpcclipUI
@@ -679,6 +728,32 @@ system.runInterval(() => {
     }
 }, 2);
 
+// SECTION: Npcclip Runtime Loop
+system.runInterval(() => {
+    if (!toolsEnabled) return;
+
+    const blocks = loadLargeJSON("blocks");
+    const npcclipBlocks = blocks.filter(block =>
+        block?.typeId === "brr:tool_npcclip" && !parseBooleanLike(block?.data?.startDisabled, false)
+    );
+    if (npcclipBlocks.length === 0) return;
+
+    const npcclipRepelRuntimeOptions = getNpcclipRepelRuntimeOptions();
+    for (const block of npcclipBlocks) {
+        let dimension;
+        try {
+            dimension = world.getDimension(block.dimension);
+        } catch {
+            continue;
+        }
+
+        const entities = Array.from(dimension.getEntities()).filter(entity => `${entity?.typeId ?? ""}` !== "minecraft:player");
+        for (const entity of entities) {
+            applyNpcclipRepel(entity, block, npcclipRepelRuntimeOptions);
+        }
+    }
+}, 2);
+
 // SECTION: Playerclip Runtime Loop
 system.runInterval(() => {
     if (!toolsEnabled) return;
@@ -712,7 +787,7 @@ system.runInterval(() => {
         if (activePlayerspawnBlocks.length > 1 && !playerspawnWarningShown) {
             playerspawnWarningShown = true;
             try {
-                world.sendMessage("§e[Info Playerspawn] Multiple active info_playerspawn blocks detected. Disable all but one.");
+                world.sendMessage("§eYou can have only 1 info_playerspawn block active at a time bro.");
             } catch { }
         }
         if (activePlayerspawnBlocks.length <= 1) {
@@ -744,6 +819,108 @@ system.runInterval(() => {
         lastAppliedWorldSpawnKey = spawnKey;
     }
 }, 100);
+
+// SECTION: Game Nametag Runtime Loop
+system.runInterval(() => {
+    const blocks = loadLargeJSON("blocks");
+    const activeNametagBlocks = blocks.filter(block =>
+        block?.typeId === "brr:game_nametag_block" && !parseBooleanLike(block?.data?.startDisabled, false)
+    );
+
+    const allPlayers = world.getPlayers();
+    const playerBuckets = new Map();
+
+    function parseOrder(value) {
+        const parsed = Number.parseInt(`${value ?? "0"}`, 10);
+        return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function formatNametag(rawNametag) {
+        const trimmed = `${rawNametag ?? ""}`.trim();
+        if (!trimmed) return "";
+        const withEmoji = applyEmojiReplacements(trimmed);
+        return `[§r${withEmoji}§r]`;
+    }
+
+    for (const block of activeNametagBlocks) {
+        const tag = formatNametag(block?.data?.nametag);
+        if (!tag) continue;
+
+        const worksInUsernames = parseBooleanLike(block?.data?.worksInUsernames, true);
+        const worksInChat = parseBooleanLike(block?.data?.worksInChat, true);
+        const usesPrefix = parseBooleanLike(block?.data?.prefix, true);
+        const usesSuffix = parseBooleanLike(block?.data?.suffix, false);
+        const order = parseOrder(block?.data?.nametagOrder);
+        const selector = `${block?.data?.selectors ?? "@a"}`.trim() || "@a";
+
+        const targets = getGameNametagTargets(block, selector, {
+            parseSelectorFilters,
+            applyEntityFilters
+        });
+
+        for (const player of targets) {
+            const playerId = `${player?.id ?? ""}`;
+            if (!playerId) continue;
+
+            if (!playerBuckets.has(playerId)) {
+                playerBuckets.set(playerId, {
+                    player,
+                    entries: []
+                });
+            }
+
+            playerBuckets.get(playerId).entries.push({
+                order,
+                worksInUsernames,
+                worksInChat,
+                usesPrefix,
+                usesSuffix,
+                tag
+            });
+        }
+    }
+
+    for (const player of allPlayers) {
+        const playerId = `${player?.id ?? ""}`;
+        const bucket = playerBuckets.get(playerId);
+
+        if (!bucket || bucket.entries.length === 0) {
+            try {
+                player.setDynamicProperty("brr_nametag", undefined);
+            } catch { }
+            continue;
+        }
+
+        const entries = bucket.entries.sort((a, b) => a.order - b.order);
+        const chatPrefix = entries
+            .filter(entry => entry.worksInChat && entry.usesPrefix)
+            .map(entry => `${entry.tag} `)
+            .join("");
+        const chatSuffix = entries
+            .filter(entry => entry.worksInChat && entry.usesSuffix)
+            .map(entry => ` ${entry.tag}`)
+            .join("");
+        const usernamePrefix = entries
+            .filter(entry => entry.worksInUsernames && entry.usesPrefix)
+            .map(entry => `${entry.tag} `)
+            .join("");
+        const usernameSuffix = entries
+            .filter(entry => entry.worksInUsernames && entry.usesSuffix)
+            .map(entry => ` ${entry.tag}`)
+            .join("");
+
+        const payload = {
+            chatPrefix,
+            chatSuffix,
+            usernamePrefix,
+            usernameSuffix
+        };
+
+        try {
+            player.setDynamicProperty("brr_nametag", JSON.stringify(payload));
+        } catch { }
+    }
+}, 10);
 
 // SECTION: Tool Particle Rendering Loop
 system.runInterval(() => {
@@ -839,5 +1016,35 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
         system.run(() => {
             openToolUIForBlock(data.player, blockEntry);
         });
+    }
+})
+
+
+// hh
+
+world.afterEvents.playerPlaceBlock.subscribe((data) => {
+    const blockId = data.block.typeId
+    if (blockId === "brr:subspace_tripmine_block") {
+        let pos = data.block.location
+        data.player.runCommand(`summon brr:subspace_tripmine_entity ${pos.x} ${pos.y} ${pos.z}`)
+        data.player.runCommand(`setblock ${pos.x} ${pos.y} ${pos.z} air`)
+        data.player.runCommand(`title @a[tag=game] title §5§kSubspace Tripmine`)
+    }
+});
+
+world.afterEvents.entitySpawn.subscribe((data) => {
+    let entityId = data.entity.typeId
+    if (entityId === "brr:subspace_tripmine_entity") {
+        let pos = data.entity.location
+        system.runTimeout(() => {
+            world.getDimension("overworld").runCommand(`execute positioned ${pos.x} ${pos.y} ${pos.z} run playanimation @e[type=brr:subspace_tripmine_entity, r=0.5] explode`)
+            system.runTimeout(() => {
+                world.getDimension("overworld").runCommand(`execute positioned ${pos.x} ${pos.y} ${pos.z} run tag @a[r=12, tag=game, tag=!spectator, tag=!duel1, tag=!duel2] add subspace1`)
+                system.runTimeout(() => {
+                    world.getDimension("overworld").runCommand(`execute positioned ${pos.x} ${pos.y} ${pos.z} run tp @e[type=brr:subspace_tripmine_entity, r=1] 0 -10 0`)
+                    world.getDimension("overworld").runCommand(`execute positioned 0 -10 0 run kill @e[type=brr:subspace_tripmine_entity, r=1]`)
+                }, 50);
+            }, 295);
+        }, 5);
     }
 })

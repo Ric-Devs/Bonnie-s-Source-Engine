@@ -5,7 +5,7 @@
 			"identifier": "brr:dino_speecher",
 			"menu_category": {
 				"category": "equipment",
-				"group": "brr:itemGroup.name.tools"
+				"group": "itemGroup.name.tools"
 			}
 		},
 		"components": {

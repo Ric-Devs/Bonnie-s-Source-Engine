@@ -18,7 +18,7 @@ export function selectorTargetsEntity(selectorRaw, entity, block, options) {
     }
 
     const base = normalized.slice(0, 2);
-    if (base !== "@e") return false;
+    if (!["@e", "@a", "@p", "@r", "@s"].includes(base)) return false;
 
     let dimension;
     try {
@@ -30,6 +30,11 @@ export function selectorTargetsEntity(selectorRaw, entity, block, options) {
     let entities = Array.from(dimension.getEntities());
     const filters = typeof parseSelectorFilters === "function" ? parseSelectorFilters(selector) : null;
     entities = typeof applyEntityFilters === "function" ? applyEntityFilters(entities, filters) : entities;
+
+    if (base === "@a" || base === "@p" || base === "@r" || base === "@s") {
+        entities = entities.filter(candidate => `${candidate?.typeId ?? ""}` === "minecraft:player");
+    }
+
     return entities.some(candidate => candidate?.id === entity.id);
 }
 
@@ -71,6 +76,68 @@ export function shouldEnableNpcclipCollision(block, options) {
     }
 
     return false;
+}
+
+export function applyNpcclipRepel(entity, block, options) {
+    if (!entity || !block) return;
+    if (`${entity?.typeId ?? ""}` === "minecraft:player") return;
+
+    const {
+        parseBooleanLike,
+        isEntityNearBlock,
+        parseSelectorFilters,
+        applyEntityFilters,
+        npcclipRepelCooldowns,
+        npcclipLastSafePositions,
+        cooldownMs
+    } = options ?? {};
+
+    if (entity?.dimension?.id !== block.dimension) return;
+    if (typeof parseBooleanLike !== "function" || typeof isEntityNearBlock !== "function") return;
+    if (!(npcclipRepelCooldowns instanceof Map)) return;
+    if (!(npcclipLastSafePositions instanceof Map)) return;
+    if (parseBooleanLike(block?.data?.startDisabled, false)) return;
+
+    const isNearBlock = isEntityNearBlock(entity, block, 0.45);
+    const blockKey = `${block.dimension}|${block.x}|${block.y}|${block.z}`;
+    const safePosKey = `${entity.id}|${blockKey}`;
+
+    if (!isNearBlock) {
+        npcclipLastSafePositions.set(safePosKey, {
+            x: entity.location.x,
+            y: entity.location.y,
+            z: entity.location.z,
+            dimension: entity.dimension?.id
+        });
+        return;
+    }
+
+    const excludeSelector = `${block?.data?.excludeSelector ?? ""}`.trim();
+    const isExcluded = excludeSelector.length > 0
+        ? selectorTargetsEntity(excludeSelector, entity, block, { parseSelectorFilters, applyEntityFilters })
+        : false;
+    if (isExcluded) return;
+
+    const now = Date.now();
+    const cooldownKey = `${entity.id}|${blockKey}`;
+    const lastRepel = npcclipRepelCooldowns.get(cooldownKey) ?? 0;
+    if (now - lastRepel < (Number.isFinite(cooldownMs) ? cooldownMs : 140)) return;
+    npcclipRepelCooldowns.set(cooldownKey, now);
+
+    const lastSafePos = npcclipLastSafePositions.get(safePosKey);
+    if (lastSafePos && lastSafePos.dimension === entity.dimension?.id) {
+        try {
+            entity.teleport(
+                {
+                    x: lastSafePos.x,
+                    y: lastSafePos.y,
+                    z: lastSafePos.z
+                },
+                { dimension: entity.dimension }
+            );
+            return;
+        } catch { }
+    }
 }
 
 // SECTION: Npcclip UI Data Helpers

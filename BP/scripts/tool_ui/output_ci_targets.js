@@ -11,6 +11,7 @@ export let outputClassInfoTargets = [
     "areaportalSelector",
     "areaportalDestination",
     "areaportalDestinationBlock",
+    "targetFacingDirection",
 
     "playerspawnWorldSpawnAtBlock",
     "playerspawnWorldSpawn",
@@ -21,6 +22,13 @@ export let outputClassInfoTargets = [
     "playerclipExcludeSelector",
 
     "npcclipExcludeSelector"
+    ,"gameNametagWorksInUsernames"
+    ,"gameNametagWorksInChat"
+    ,"gameNametagSuffix"
+    ,"gameNametagPrefix"
+    ,"gameNametagNametag"
+    ,"gameNametagOrder"
+    ,"gameNametagSelectors"
 ]
 
 // SECTION: Output Target Metadata
@@ -70,6 +78,11 @@ export const outputTargetMetadata = {
         valueType: "string",
         supportedBlockTypes: ["brr:tool_areaportal"]
     },
+    targetFacingDirection: {
+        label: "Target AreaPortal: Facing direction",
+        valueType: "string",
+        supportedBlockTypes: ["brr:info_target_areaportal_block"]
+    },
     playerspawnWorldSpawnAtBlock: {
         label: "Playerspawn: World spawn at block",
         valueType: "boolean",
@@ -104,6 +117,41 @@ export const outputTargetMetadata = {
         label: "Npcclip: Exclude selector",
         valueType: "string",
         supportedBlockTypes: ["brr:tool_npcclip"]
+    },
+    gameNametagWorksInUsernames: {
+        label: "Game Nametag: Works in usernames",
+        valueType: "boolean",
+        supportedBlockTypes: ["brr:game_nametag_block"]
+    },
+    gameNametagWorksInChat: {
+        label: "Game Nametag: Works in chat",
+        valueType: "boolean",
+        supportedBlockTypes: ["brr:game_nametag_block"]
+    },
+    gameNametagSuffix: {
+        label: "Game Nametag: Suffix",
+        valueType: "boolean",
+        supportedBlockTypes: ["brr:game_nametag_block"]
+    },
+    gameNametagPrefix: {
+        label: "Game Nametag: Prefix",
+        valueType: "boolean",
+        supportedBlockTypes: ["brr:game_nametag_block"]
+    },
+    gameNametagNametag: {
+        label: "Game Nametag: Nametag",
+        valueType: "string",
+        supportedBlockTypes: ["brr:game_nametag_block"]
+    },
+    gameNametagOrder: {
+        label: "Game Nametag: Nametag order",
+        valueType: "string",
+        supportedBlockTypes: ["brr:game_nametag_block"]
+    },
+    gameNametagSelectors: {
+        label: "Game Nametag: Selectors",
+        valueType: "string",
+        supportedBlockTypes: ["brr:game_nametag_block"]
     }
 };
 

@@ -96,6 +96,32 @@ export function handleAreaPortalBlock(block, blocks, options) {
             const targetBlock = blocks.find(b => b.typeId === "brr:info_target_areaportal_block" && b.data?.name === block.data.destinationBlock);
             if (targetBlock) {
                 destCoords = { x: targetBlock.x + 0.5, y: targetBlock.y, z: targetBlock.z + 0.5 };
+                const facingRaw = `${targetBlock.data?.targetFacingDirection ?? ""}`.trim();
+                const facingParts = facingRaw.split(/\s+/).map(part => Number.parseFloat(part));
+                const hasFacing = facingParts.length === 3 && facingParts.every(Number.isFinite);
+
+                if (hasFacing) {
+                    const fx = facingParts[0];
+                    const fy = facingParts[1];
+                    const fz = facingParts[2];
+                    const dx = fx - destCoords.x;
+                    const dy = fy - destCoords.y;
+                    const dz = fz - destCoords.z;
+                    const horizontalDistance = Math.sqrt(dx * dx + dz * dz);
+                    const yaw = Math.atan2(-dx, dz) * (180 / Math.PI);
+                    const pitch = Math.atan2(dy, horizontalDistance) * (180 / Math.PI);
+
+                    try {
+                        entity.teleport(destCoords, {
+                            dimension: destDim,
+                            rotation: {
+                                x: pitch,
+                                y: yaw
+                            }
+                        });
+                        continue;
+                    } catch { }
+                }
             }
         } else if (block.data?.destination) {
             const coords = `${block.data.destination}`.trim().split(/\s+/);

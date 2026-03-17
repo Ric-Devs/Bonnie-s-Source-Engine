@@ -1,0 +1,21 @@
+{
+	"format_version": "1.21.80",
+	"minecraft:item": {
+		"description": {
+			"identifier": "brr:9mmclip",
+			"menu_category": {
+				"category": "equipment",
+				"group": "brr:itemGroup.name.weapons_ammo",
+				"is_hidden_in_commands": false
+			}
+		},
+		"components": {
+			"minecraft:icon": "brr_9mmclip",
+			"minecraft:durability": {
+				"max_durability": 150
+			},
+			"minecraft:max_stack_size": 1,
+			"minecraft:allow_off_hand": true
+		}
+	}
+}

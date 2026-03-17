@@ -64,6 +64,7 @@ export function infoTargetAreaportalUI(player, blockEntry, onSave) {
     const targetName = blockEntry.data?.name || `target_areaportal${Math.round(Math.random() * 10000)}`;
     targetForm.textField("Name", "name", { defaultValue: targetName });
     targetForm.toggle("Start disabled", { defaultValue: Boolean(blockEntry.data?.startDisabled) });
+    targetForm.textField("Facing Direction", "Pos: XYZ (optional)", { defaultValue: blockEntry.data?.targetFacingDirection || "" });
 
     addDecorativeSection(targetForm, "Outputs");
     targetForm.toggle("Add this output", { defaultValue: false });
@@ -104,7 +105,7 @@ export function infoTargetAreaportalUI(player, blockEntry, onSave) {
         if (response.canceled) return;
 
         const formData = (response.formValues ?? []).filter(value => value !== undefined && value !== null);
-        if (formData.length < 9) {
+        if (formData.length < 10) {
             player.sendMessage("§cSave failed: form data is incomplete.");
             return;
         }
@@ -112,6 +113,7 @@ export function infoTargetAreaportalUI(player, blockEntry, onSave) {
         let cursor = 0;
         const name = `${formData[cursor++] ?? targetName}`;
         const startDisabled = Boolean(formData[cursor++]);
+        const targetFacingDirection = `${formData[cursor++] ?? ""}`.trim();
 
         const addOutput = Boolean(formData[cursor++]);
         const outputName = `${formData[cursor++] ?? ""}`.trim();
@@ -148,6 +150,7 @@ export function infoTargetAreaportalUI(player, blockEntry, onSave) {
 
         blockEntry.data.name = name;
         blockEntry.data.startDisabled = startDisabled;
+        blockEntry.data.targetFacingDirection = targetFacingDirection;
         blockEntry.data.outputs = nextOutputs;
 
         // Call the save callback

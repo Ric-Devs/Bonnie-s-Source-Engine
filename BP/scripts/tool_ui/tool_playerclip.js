@@ -21,7 +21,7 @@ export function selectorTargetsPlayer(selectorRaw, player, block, options) {
     }
 
     const base = normalized.slice(0, 2);
-    if (!["@a", "@p", "@r", "@s"].includes(base)) return false;
+    if (!["@a", "@p", "@r", "@s", "@e"].includes(base)) return false;
     if (base === "@s") return false;
 
     let dimension;
@@ -31,12 +31,14 @@ export function selectorTargetsPlayer(selectorRaw, player, block, options) {
         return false;
     }
 
-    let players = Array.from(dimension.getPlayers());
     const filters = typeof parseSelectorFilters === "function" ? parseSelectorFilters(selector) : null;
+    let players = base === "@e"
+        ? Array.from(dimension.getEntities()).filter(entity => `${entity?.typeId ?? ""}` === "minecraft:player")
+        : Array.from(dimension.getPlayers());
     players = typeof applyEntityFilters === "function" ? applyEntityFilters(players, filters) : players;
     if (players.length === 0) return false;
 
-    if (base === "@a" || base === "@r") {
+    if (base === "@a" || base === "@r" || base === "@e") {
         return players.some(candidate => candidate?.id === player.id);
     }
 
@@ -72,7 +74,7 @@ export function playerMatchesPlayerclipExclusion(player, block, options) {
     if (typeof parseBooleanLike !== "function") return false;
     if (parseBooleanLike(block.data.startDisabled, false)) return true;
 
-    const excludesOperators = parseBooleanLike(block.data.excludeOperators, false);
+    const excludesOperators = parseBooleanLike(block.data.excludeOperators, true);
     if (excludesOperators && typeof isPlayerOperator === "function" && isPlayerOperator(player)) {
         return true;
     }
@@ -139,13 +141,30 @@ export function applyPlayerclipRepel(player, block, options) {
         parseSelectorFilters,
         applyEntityFilters,
         playerclipPushCooldowns,
+        playerclipLastSafePositions,
         cooldownMs
     } = options ?? {};
 
     if (player?.dimension?.id !== block.dimension) return;
     if (typeof parseBooleanLike !== "function" || typeof isEntityNearBlock !== "function") return;
     if (!(playerclipPushCooldowns instanceof Map)) return;
+    if (!(playerclipLastSafePositions instanceof Map)) return;
     if (parseBooleanLike(block?.data?.startDisabled, false)) return;
+
+    const isNearBlock = isEntityNearBlock(player, block, 0.45);
+    const blockKey = `${block.dimension}|${block.x}|${block.y}|${block.z}`;
+    const safePosKey = `${player.id}|${blockKey}`;
+
+    if (!isNearBlock) {
+        playerclipLastSafePositions.set(safePosKey, {
+            x: player.location.x,
+            y: player.location.y,
+            z: player.location.z,
+            dimension: player.dimension?.id
+        });
+        return;
+    }
+
     if (playerMatchesPlayerclipExclusion(player, block, {
         parseBooleanLike,
         isPlayerOperator,
@@ -153,14 +172,27 @@ export function applyPlayerclipRepel(player, block, options) {
         parseSelectorFilters,
         applyEntityFilters
     })) return;
-    if (!isEntityNearBlock(player, block, 0.45)) return;
 
     const now = Date.now();
-    const blockKey = `${block.dimension}|${block.x}|${block.y}|${block.z}`;
     const cooldownKey = `${player.id}|${blockKey}`;
     const lastPush = playerclipPushCooldowns.get(cooldownKey) ?? 0;
     if (now - lastPush < (Number.isFinite(cooldownMs) ? cooldownMs : 140)) return;
     playerclipPushCooldowns.set(cooldownKey, now);
+
+    const lastSafePos = playerclipLastSafePositions.get(safePosKey);
+    if (lastSafePos && lastSafePos.dimension === player.dimension?.id) {
+        try {
+            player.teleport(
+                {
+                    x: lastSafePos.x,
+                    y: lastSafePos.y,
+                    z: lastSafePos.z
+                },
+                { dimension: player.dimension }
+            );
+            return;
+        } catch { }
+    }
 
     const centerX = block.x + 0.5;
     const centerZ = block.z + 0.5;
@@ -251,7 +283,7 @@ export function toolPlayerclipUI(player, blockEntry, onSave) {
 
     form.textField("Name", "name", { defaultValue: blockName });
     form.toggle("Start disabled", { defaultValue: Boolean(blockEntry.data?.startDisabled) });
-    form.toggle("Exclude Operators", { defaultValue: Boolean(blockEntry.data?.excludeOperators) });
+    form.toggle("Exclude Operators", { defaultValue: blockEntry.data?.excludeOperators !== false });
     form.dropdown("Exclude Gamemode", gamemodeOptions, { defaultValueIndex: gamemodeIndex });
     form.textField("Exclude Selector", "@a[tag=lobby,tag=!game]", { defaultValue: `${blockEntry.data?.excludeSelector ?? ""}` });
 

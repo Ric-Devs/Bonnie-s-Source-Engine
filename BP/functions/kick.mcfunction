@@ -1,2 +1,9 @@
-kick "Frogger Splash5" You are not welcome on any BRR Produced experience starting 21.01.2026 0:30 GMT+2
-kick "Iron man 360237" banned for griefing
+#kick "Frogger Splash5" "you have been terminated from any BRR produced experience - Date: 21.01.2026 0:30 GMT+2 - BRR TECH"
+kick "Iron man 360237" "banned for griefing"
+kick "xQqritozx" "you have been terminated from any BRR produced experience - Date: 01.03.2026 2:29 GMT+2 - BRR TECH"
+kick "NetherKing2013" "you have been terminated from any BRR produced experience - Date: 03.03.2026 0:11 GMT+2 - BRR TECH"
+kick "KingJudah1337"  "you have been terminated from any BRR produced experience - Date: 03.03.2026 3:24 GMT+2 - BRR TECH"
+kick "GoGoGoGo14" "you have been terminated from any BRR produced experience - Date: 03.03.2026 3:25 GMT+2 - BRR TECH"
+kick "IronSeeks" "You have been terminated from any BRR produced experience for immature behaviour - Date: 13.3.2026 21:49 GMT+2 - BRR TECH"
+kick "Brayden657764" "You have been terminated from any BRR produced experience for immature behaviour - Date: 14.3.2026 0:51 GMT+2 - BRR TECH"
+kick "JumpingVoyage03" "You have been terminated from any BRR produced experience for unwanted advertisement - Date: 16.3.2026 18:35 GMT+2 - BRR TECH"

@@ -51,7 +51,14 @@ export function fireOutputsForEvent(sourceBlock, eventName, options) {
 			playerclipExcludeOperators: "excludeOperators",
 			playerclipExcludeGamemode: "excludeGamemode",
 			playerclipExcludeSelector: "excludeSelector",
-			npcclipExcludeSelector: "excludeSelector"
+			npcclipExcludeSelector: "excludeSelector",
+			gameNametagWorksInUsernames: "worksInUsernames",
+			gameNametagWorksInChat: "worksInChat",
+			gameNametagSuffix: "suffix",
+			gameNametagPrefix: "prefix",
+			gameNametagNametag: "nametag",
+			gameNametagOrder: "nametagOrder",
+			gameNametagSelectors: "selectors"
 		};
 
 		return aliases[targetProperty] ?? targetProperty;
@@ -61,6 +68,10 @@ export function fireOutputsForEvent(sourceBlock, eventName, options) {
 		if (targetProperty === "worldSpawnAtBlock"
 			|| targetProperty === "setsPlayerSpawnPoint"
 			|| targetProperty === "excludeOperators"
+			|| targetProperty === "worksInUsernames"
+			|| targetProperty === "worksInChat"
+			|| targetProperty === "suffix"
+			|| targetProperty === "prefix"
 			|| targetProperty === "startDisabled") {
 			return parseBooleanLike(rawValue, false);
 		}

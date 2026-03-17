@@ -1,5 +1,8 @@
-import { world, system, CommandPermissionLevel } from "@minecraft/server";
+import * as mc from "@minecraft/server";
 import { ModalFormData, ActionFormData } from "@minecraft/server-ui";
+
+const { world, system } = mc;
+const CommandPermissionLevel = mc.CommandPermissionLevel;
 
 const emojis = [
     { id: ":skull:", emoji: "", displayName: "Skull" },
@@ -265,15 +268,26 @@ function getCustomNametagParts(player, context) {
     }
 }
 
+function normalizeChatMessage(rawMessage) {
+    return `${rawMessage ?? ""}`
+        .replaceAll("\n", " ")
+        .replaceAll("%", "%%");
+}
+
+export function applyEmojiReplacements(message) {
+    let processedMessage = message;
+    for (const emoji of emojis) {
+        processedMessage = processedMessage.replaceAll(emoji.id, emoji.emoji);
+    }
+    return processedMessage;
+}
+
 export function sendRankedMessage(player, rawMessage) {
     const tags = player.getTags();
     const rankPrefix = chatRank(player, tags);
     const nametagParts = getCustomNametagParts(player, "chat");
 
-    let processedMessage = rawMessage;
-    for (const emoji of emojis) {
-        processedMessage = processedMessage.replaceAll(emoji.id, emoji.emoji);
-    }
+    const processedMessage = applyEmojiReplacements(normalizeChatMessage(rawMessage));
 
     const text = `§r${rankPrefix}${nametagParts.prefix}§r${player.name}${nametagParts.suffix}: §f${processedMessage}`;
     world.sendMessage({ rawtext: [{ text: text }] });
@@ -301,6 +315,7 @@ export function chatRank(player, tags) {
     if (tags.includes("icecream")) rankPrefix += "[§r]";
     if (tags.includes("skull")) rankPrefix += "[§r]";
     if (tags.includes("yt")) rankPrefix += "[§4You§fTuber§r]";
+    if (tags.includes("strawberry")) rankPrefix += "[§r]";
 
     if (tags.includes("lobby") && !tags.includes("game")) rankPrefix += "[§b§lLobby§r] ";
     if (tags.includes("game")) rankPrefix += "[§a§lGamer§r] ";
@@ -332,6 +347,7 @@ export function nametagRank(player, tags) {
     if (tags.includes("icecream")) rankPrefix += "[§r]";
     if (tags.includes("skull")) rankPrefix += "[§r]";
     if (tags.includes("yt")) rankPrefix += "[§4You§fTuber§r]";
+    if (tags.includes("strawberry")) rankPrefix += "[§r]";
 
     if (tags.includes("lobby") && !tags.includes("game")) rankPrefix += "[§b§lLobby§r] ";
     if (tags.includes("game")) rankPrefix += "[§a§lGamer§r] ";
@@ -353,10 +369,7 @@ export function handleMessage() {
                 return;
             }
 
-            // Replace emojis with their respective unicode character
-            for (const emoji of emojis) {
-                message = message.replaceAll(emoji.id, emoji.emoji);
-            }
+            message = applyEmojiReplacements(normalizeChatMessage(message));
 
             const rankPrefix = chatRank(player, tags);
 
@@ -399,6 +412,10 @@ try {
 
 // Emoji command
 export function emojiCommand(data) {
+    if (!data?.customCommandRegistry || !CommandPermissionLevel) {
+        return;
+    }
+
     data.customCommandRegistry.registerCommand(
         {
             name: "brr:emojis",
@@ -530,10 +547,7 @@ export function showDinoSpeecherMenu(player) {
                 const rankPrefix = chatRank(player, tags);
 
                 // Process Emojis manually for the whisper
-                let processedMessage = messageText;
-                for (const emoji of emojis) {
-                    processedMessage = processedMessage.replaceAll(emoji.id, emoji.emoji);
-                }
+                let processedMessage = applyEmojiReplacements(normalizeChatMessage(messageText));
 
                 // Format: Rank + Name + "whispers to you:" + Message
                 const whisperText = `§r${rankPrefix}§r${player.name} §iwhispers to you: §f${processedMessage}`;
