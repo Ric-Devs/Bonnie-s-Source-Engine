@@ -1,0 +1,8 @@
+{
+	"format_version": "1.16.100",
+	"minecraft:texture_set": {
+		"color": "tau_cannon",
+		"metalness_emissive_roughness": "tau_cannon_mer",
+		"heightmap": "tau_cannon_height"
+	}
+}

@@ -1,0 +1,7 @@
+{
+	"format_version": "1.16.100",
+	"minecraft:texture_set": {
+		"color": "egon_particle",
+		"metalness_emissive_roughness": "egon_particle_mer"
+	}
+}

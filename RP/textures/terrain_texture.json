@@ -46,8 +46,20 @@
 		"brr_data_collision": {
 			"textures": "textures/blocks/nothing"
 		},
+		"brr_data_blocklight": {
+			"textures": "textures/blocks/nothing"
+		},
 		"brr_info_target_areaportal_block": {
 			"textures": "textures/blocks/nothing"
+		},
+		"brr_tool_blocklight": {
+			"textures": "textures/blocks/brr_blockLight"
+		},
+		"brr_tool_playerclip": {
+			"textures": "textures/blocks/brr_playerClip"
+		},
+		"brr_tool_npcclip": {
+			"textures": "textures/blocks/brr_npcClip"
 		}
 	}
 }

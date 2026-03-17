@@ -7,6 +7,33 @@
 		},
 		"brr_info_target_areaportal": {
 			"textures": "textures/items/info_target_areaportal"
+		},
+		"brr_game_nametag": {
+			"textures": "textures/items/game_nametag"
+		},
+		"brr_dino_speecher": {
+			"textures": "textures/items/bonnie_plush_item"
+		},
+		"brr_gluon_gun": {
+			"textures": "textures/items/gluon_gun"
+		},
+		"brr_tau_cannon": {
+			"textures": "textures/items/tau_cannon"
+		},
+		"glock17": {
+			"textures": "textures/items/glock17"
+		},
+		"brr_glock17": {
+			"textures": "textures/items/glock17"
+		},
+		"brr_crowbar": {
+			"textures": "textures/items/crowbar"
+		},
+		"brr_gaussammo": {
+			"textures": "textures/items/gaussammo"
+		},
+		"brr_9mmclip": {
+			"textures": "textures/items/9mmclip"
 		}
 	}
 }
