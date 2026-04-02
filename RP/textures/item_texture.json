@@ -11,6 +11,27 @@
 		"brr_game_nametag": {
 			"textures": "textures/items/game_nametag"
 		},
+		"brr_logic_auto": {
+			"textures": "textures/items/logic_auto"
+		},
+		"brr_logic_branch": {
+			"textures": "textures/items/logic_branch"
+		},
+		"brr_logic_case": {
+			"textures": "textures/items/logic_case"
+		},
+		"brr_logic_compare": {
+			"textures": "textures/items/logic_compare"
+		},
+		"brr_logic_coop_manager": {
+			"textures": "textures/items/logic_coop_manager"
+		},
+		"brr_logic_random_outputs": {
+			"textures": "textures/items/logic_random_outputs"
+		},
+		"brr_logic_timer": {
+			"textures": "textures/items/logic_timer"
+		},
 		"brr_dino_speecher": {
 			"textures": "textures/items/bonnie_plush_item"
 		},
@@ -26,6 +47,9 @@
 		"brr_glock17": {
 			"textures": "textures/items/glock17"
 		},
+		"brr_magnum357": {
+			"textures": "textures/items/revolver"
+		},
 		"brr_crowbar": {
 			"textures": "textures/items/crowbar"
 		},
@@ -34,6 +58,9 @@
 		},
 		"brr_9mmclip": {
 			"textures": "textures/items/9mmclip"
+		},
+		"brr_357_ammobox": {
+			"textures": "textures/items/357magnum_ammo"
 		}
 	}
 }
