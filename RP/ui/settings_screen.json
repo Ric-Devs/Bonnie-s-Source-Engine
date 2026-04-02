@@ -1,0 +1,14 @@
+{
+    "selector_stack_panel": {
+        "$spatialPatternsPadding": [
+            0,
+            0
+        ]
+    },
+    "selector_stack_panel/controls_and_settings_selector_pane": {
+        "$spatialPatternsPadding": [
+            0,
+            0
+        ]
+    }
+}

@@ -24,6 +24,38 @@
 		"sound": "stone",
 		"textures": "nothing"
 	},
+	"brr:game_nametag_block": {
+		"sound": "stone",
+		"textures": "nothing"
+	},
+	"brr:logic_auto_block": {
+		"sound": "stone",
+		"textures": "nothing"
+	},
+	"brr:logic_branch_block": {
+		"sound": "stone",
+		"textures": "nothing"
+	},
+	"brr:logic_case_block": {
+		"sound": "stone",
+		"textures": "nothing"
+	},
+	"brr:logic_compare_block": {
+		"sound": "stone",
+		"textures": "nothing"
+	},
+	"brr:logic_coop_manager_block": {
+		"sound": "stone",
+		"textures": "nothing"
+	},
+	"brr:logic_random_outputs_block": {
+		"sound": "stone",
+		"textures": "nothing"
+	},
+	"brr:logic_timer_block": {
+		"sound": "stone",
+		"textures": "nothing"
+	},
 	"brr:data": {
 		"sound": "stone",
 		"textures": "nothing"
@@ -67,5 +99,17 @@
 	"brr:data_blocklight": {
 		"sound": "stone",
 		"textures": "brr_data_blocklight"
+	},
+	"brr:tool_blocklight": {
+		"sound": "stone",
+		"textures": "brr_tool_blocklight"
+	},
+	"brr:tool_playerclip": {
+		"sound": "stone",
+		"textures": "brr_tool_playerclip"
+	},
+	"brr:tool_npcclip": {
+		"sound": "stone",
+		"textures": "brr_tool_npcclip"
 	}
 }

@@ -15,17 +15,17 @@
 	},
 	"header": {
 		"name": "Bonnie's Source Engine",
-		"description": "Run. Think. Shoot. Live. Source. Created by BonnieRobloxRIP and Marshmallow997. Property of: The Bonnie Team.",
+		"description": "Run. Think. Shoot. Live. Source. Created by BonnieRobloxRIP. Property of: The Bonnie Team.",
 		"min_engine_version": [
 			1,
-			21,
-			130
+			26,
+			0
 		],
 		"uuid": "3a601308-2998-48ae-b4db-13a157398e44",
 		"version": [
 			1,
 			0,
-			8
+			33
 		]
 	},
 	"modules": [
@@ -35,7 +35,7 @@
 			"version": [
 				1,
 				0,
-				0
+				1
 			]
 		}
 	],
@@ -45,7 +45,7 @@
 			"version": [
 				1,
 				0,
-				8
+				33
 			]
 		}
 	],

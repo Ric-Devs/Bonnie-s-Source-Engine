@@ -468,6 +468,58 @@
                     "volume": 1
                 }
             ]
+        },
+        "weapons.357.fire": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/357_fire",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.357.centerfire": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/357_centerfire",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.357.draw_admire": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/357_draw_admire",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
+        },
+        "weapons.357.reload": {
+            "category": "music",
+            "max_distance": 20,
+            "min_distance": 4,
+            "sounds": [
+                {
+                    "load_on_low_memory": false,
+                    "name": "sounds/weapons/357_reload",
+                    "stream": true,
+                    "volume": 1
+                }
+            ]
         }
     }
 }

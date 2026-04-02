@@ -1,0 +1,70 @@
+{
+    "general_tab_section": {
+        "$spatialPatternsPadding": [
+            0,
+            0
+        ],
+        "$paddingLineDivider": [
+            0,
+            0
+        ]
+    },
+    "account_section": {
+        "$spatialPatternsPadding": [
+            0,
+            0
+        ],
+        "$paddingLineDivider": [
+            0,
+            0
+        ]
+    },
+    "gamertag_controls": {
+        "$spatialPatternsPadding": [
+            0,
+            0
+        ],
+        "$paddingLineDivider": [
+            0,
+            0
+        ]
+    },
+    "video_section": {
+        "$spatialPatternsPadding": [
+            0,
+            0
+        ],
+        "$paddingLineDivider": [
+            0,
+            0
+        ]
+    },
+    "sound_section": {
+        "$spatialPatternsPadding": [
+            "100%",
+            16
+        ]
+    },
+    "advanced_graphics_options_section": {
+        "$spatialPatternsPadding": [
+            0,
+            0
+        ],
+        "$paddingLineDivider": [
+            0,
+            0
+        ]
+    },
+    "sound_section/paddingDividerAudioSettings": {
+        "size": [
+            0,
+            4
+        ]
+    },
+    "sound_section/paddingMusic": {
+        "size": [
+            0,
+            4
+        ]
+    }
+}
