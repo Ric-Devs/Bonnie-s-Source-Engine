@@ -300,6 +300,9 @@ export function chatRank(player, tags) {
     if (["BonnieRobloxRIP", "Marshmallow997", "xXJustMaxXx7546"].includes(player.name)) {
         rankPrefix += "[§l§dDev§r] ";
     }
+    if (["DinoDaniel21"].includes(player.name)) {
+        rankPrefix += "[§l§dContributor§r] ";
+    }
 
     // Special Tags
     if (tags.includes("mega_vip")) rankPrefix += "[§l§o§aM§2E§sG§bA §sV.§2I.§aP.§r] ";
@@ -330,6 +333,9 @@ export function nametagRank(player, tags) {
 
     if (["BonnieRobloxRIP", "Marshmallow997", "xXJustMaxXx7546"].includes(player.name)) {
         rankPrefix += "[§l§dDev§r] ";
+    }
+    if (["DinoDaniel21"].includes(player.name)) {
+        rankPrefix += "[§l§dContributor§r] ";
     }
 
     // Special tags

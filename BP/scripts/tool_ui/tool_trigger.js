@@ -100,6 +100,76 @@ export function fireOutputsForEvent(sourceBlock, eventName, options) {
 	if (changed) saveBlocks("blocks", blocks);
 }
 
+export function fireNamedOutput(sourceBlock, outputName, options) {
+	if (!sourceBlock?.data || sourceBlock.data.startDisabled) return;
+	const outputs = Array.isArray(sourceBlock.data.outputs) ? sourceBlock.data.outputs : [];
+	if (outputs.length === 0) return;
+
+	const { loadBlocks, saveBlocks, parseBooleanLike } = options ?? {};
+	if (typeof loadBlocks !== "function" || typeof saveBlocks !== "function" || typeof parseBooleanLike !== "function") return;
+
+	function resolveProperty(targetProperty) {
+		const aliases = {
+			playerspawnWorldSpawnAtBlock: "worldSpawnAtBlock",
+			playerspawnWorldSpawn: "worldSpawn",
+			playerspawnSetsPlayerSpawnPoint: "setsPlayerSpawnPoint",
+			playerclipExcludeOperators: "excludeOperators",
+			playerclipExcludeGamemode: "excludeGamemode",
+			playerclipExcludeSelector: "excludeSelector",
+			npcclipExcludeSelector: "excludeSelector",
+			gameNametagWorksInUsernames: "worksInUsernames",
+			gameNametagWorksInChat: "worksInChat",
+			gameNametagSuffix: "suffix",
+			gameNametagPrefix: "prefix",
+			gameNametagNametag: "nametag",
+			gameNametagOrder: "nametagOrder",
+			gameNametagSelectors: "selectors"
+		};
+		return aliases[targetProperty] ?? targetProperty;
+	}
+
+	function coerceValue(targetProperty, rawValue) {
+		if (targetProperty === "worldSpawnAtBlock"
+			|| targetProperty === "setsPlayerSpawnPoint"
+			|| targetProperty === "excludeOperators"
+			|| targetProperty === "worksInUsernames"
+			|| targetProperty === "worksInChat"
+			|| targetProperty === "suffix"
+			|| targetProperty === "prefix"
+			|| targetProperty === "startDisabled"
+			|| targetProperty === "coopSetStateATrue"
+			|| targetProperty === "coopSetStateAFalse"
+			|| targetProperty === "coopToggleStateA"
+			|| targetProperty === "coopSetStateBTrue"
+			|| targetProperty === "coopSetStateBFalse"
+			|| targetProperty === "coopToggleStateB"
+			|| targetProperty === "randomChanceTrigger") {
+			return parseBooleanLike(rawValue, false);
+		}
+		return `${rawValue ?? ""}`;
+	}
+
+	const blocks = loadBlocks("blocks");
+	let changed = false;
+
+	for (const output of outputs) {
+		if (`${output?.name ?? ""}`.trim() !== outputName) continue;
+
+		const targetName = `${output?.targetName ?? ""}`.trim();
+		const targetProperty = resolveProperty(`${output?.targetProperty ?? ""}`.trim());
+		if (!targetName || !targetProperty) continue;
+
+		const targetIndex = blocks.findIndex(block => `${block?.data?.name ?? ""}`.trim() === targetName);
+		if (targetIndex === -1) continue;
+
+		if (!blocks[targetIndex].data) blocks[targetIndex].data = {};
+		blocks[targetIndex].data[targetProperty] = coerceValue(targetProperty, output?.targetValue);
+		changed = true;
+	}
+
+	if (changed) saveBlocks("blocks", blocks);
+}
+
 // SECTION: Trigger UI
 export function triggerToolUI(player, blockEntry, options) {
 	if (!blockEntry.data) blockEntry.data = {};

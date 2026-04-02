@@ -41,6 +41,74 @@
 						"target": "self"
 					}
 				}
+			},
+			"brr:rideable_default": {
+				"minecraft:rideable": {
+					"family_types": [
+						"parrot_tame"
+					],
+					"pull_in_entities": true,
+					"seat_count": 2,
+					"seats": [
+						{
+							"lock_rider_rotation": 0,
+							"min_rider_count": 0,
+							"max_rider_count": 0,
+							"position": [
+								0.4,
+								-0.2,
+								-0.1
+							]
+						},
+						{
+							"lock_rider_rotation": 0,
+							"min_rider_count": 1,
+							"max_rider_count": 2,
+							"position": [
+								-0.4,
+								-0.2,
+								-0.1
+							]
+						}
+					]
+				}
+			},
+			"brr:collar_small": {
+				"minecraft:scale": {
+					"value": 0.55
+				}
+			},
+			"brr:rideable_shoulders": {
+				"minecraft:rideable": {
+					"seat_count": 2,
+					"family_types": [
+						"player"
+					],
+					"seats": [
+						{
+							"position": [
+								0.45,
+								-0.1,
+								-0.05
+							],
+							"min_rider_count": 0,
+							"max_rider_count": 2,
+							"rotate_rider_by": 0,
+							"lock_rider_rotation": 90
+						},
+						{
+							"position": [
+								-0.45,
+								-0.55,
+								-0.05
+							],
+							"min_rider_count": 1,
+							"max_rider_count": 2,
+							"rotate_rider_by": 0,
+							"lock_rider_rotation": 90
+						}
+					]
+				}
 			}
 		},
 		"components": {
@@ -128,35 +196,6 @@
 			"minecraft:insomnia": {
 				"days_until_insomnia": 3
 			},
-			"minecraft:rideable": {
-				"seat_count": 2,
-				"family_types": [
-					"parrot_tame"
-				],
-				"pull_in_entities": true,
-				"seats": [
-					{
-						"position": [
-							0.4,
-							-0.2,
-							-0.1
-						],
-						"min_rider_count": 0,
-						"max_rider_count": 0,
-						"lock_rider_rotation": 0
-					},
-					{
-						"position": [
-							-0.4,
-							-0.2,
-							-0.1
-						],
-						"min_rider_count": 1,
-						"max_rider_count": 2,
-						"lock_rider_rotation": 0
-					}
-				]
-			},
 			"minecraft:conditional_bandwidth_optimization": {},
 			"minecraft:block_climber": {},
 			"minecraft:environment_sensor": {
@@ -210,6 +249,56 @@
 				"remove": {
 					"component_groups": [
 						"minecraft:raid_trigger"
+					]
+				}
+			},
+			"brr:rideable_default": {
+				"add": {
+					"component_groups": [
+						"brr:rideable_default"
+					]
+				},
+				"remove": {
+					"component_groups": [
+						"brr:rideable_shoulders"
+					]
+				}
+			},
+			"brr:collar_on": {
+				"add": {
+					"component_groups": [
+						"brr:collar_small"
+					]
+				}
+			},
+			"brr:collar_off": {
+				"remove": {
+					"component_groups": [
+						"brr:collar_small"
+					]
+				}
+			},
+			"brr:shoulders_on": {
+				"add": {
+					"component_groups": [
+						"brr:rideable_shoulders"
+					]
+				},
+				"remove": {
+					"component_groups": [
+						"brr:rideable_default"
+					]
+				}
+			},
+			"brr:shoulders_off": {
+				"add": {
+					"component_groups": [
+						"brr:rideable_default"
+					]
+				},
+				"remove": {
+					"component_groups": [
+						"brr:rideable_shoulders"
 					]
 				}
 			}

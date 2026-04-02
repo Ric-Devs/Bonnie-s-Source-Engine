@@ -32,7 +32,7 @@ gamerule doinsomnia false
 gamerule showrecipemessages false
 gamerule locatorbar false
 difficulty peaceful
-time set 500
+time set 250
 setworldspawn 0 1 -1
 clearspawnpoint @a
 fill -16 -64 -16 16 -64 16 air

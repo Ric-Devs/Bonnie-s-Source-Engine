@@ -11,6 +11,11 @@
 		},
 		"components": {
 			"minecraft:icon": "brr_gluon_gun",
+			"minecraft:tags": {
+				"tags": [
+					"brr:gluon_gun"
+				]
+			},
 			"minecraft:hand_equipped": true,
 			"minecraft:use_animation": "crossbow",
 			"minecraft:use_modifiers": {

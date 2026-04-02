@@ -1,0 +1,21 @@
+{
+	"format_version": "1.21.0",
+	"minecraft:item": {
+		"description": {
+			"identifier": "brr:logic_timer",
+			"menu_category": {
+				"category": "equipment",
+				"is_hidden_in_commands": false,
+				"group": "itemGroup.name.logic_blocks"
+			}
+		},
+		"components": {
+			"minecraft:icon": "brr_logic_timer",
+			"minecraft:block_placer": {
+				"block": "brr:logic_timer_block"
+			},
+			"minecraft:allow_off_hand": true,
+			"minecraft:can_destroy_in_creative": true
+		}
+	}
+}

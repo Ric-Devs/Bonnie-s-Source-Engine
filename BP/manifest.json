@@ -18,14 +18,14 @@
 		"description": "Run. Think. Shoot. Live. Source. Created by BonnieRobloxRIP. Property of: The Bonnie Team.",
 		"min_engine_version": [
 			1,
-			21,
-			130
+			26,
+			0
 		],
 		"uuid": "7f638fc9-d6e7-4827-908c-acbb3736c03a",
 		"version": [
 			1,
 			0,
-			22
+			33
 		]
 	},
 	"modules": [
@@ -56,12 +56,12 @@
 			"version": [
 				1,
 				0,
-				22
+				33
 			]
 		},
 		{
 			"module_name": "@minecraft/server",
-			"version": "2.6.0-beta"
+			"version": "2.7.0-beta"
 		},
 		{
 			"module_name": "@minecraft/server-ui",

@@ -29,6 +29,14 @@ export let outputClassInfoTargets = [
     ,"gameNametagNametag"
     ,"gameNametagOrder"
     ,"gameNametagSelectors"
+
+    ,"coopSetStateATrue"
+    ,"coopSetStateAFalse"
+    ,"coopToggleStateA"
+    ,"coopSetStateBTrue"
+    ,"coopSetStateBFalse"
+    ,"coopToggleStateB"
+    ,"randomChanceTrigger"
 ]
 
 // SECTION: Output Target Metadata
@@ -152,6 +160,41 @@ export const outputTargetMetadata = {
         label: "Game Nametag: Selectors",
         valueType: "string",
         supportedBlockTypes: ["brr:game_nametag_block"]
+    },
+    coopSetStateATrue: {
+        label: "Coop: Set State A True",
+        valueType: "boolean",
+        supportedBlockTypes: ["brr:logic_coop_manager_block"]
+    },
+    coopSetStateAFalse: {
+        label: "Coop: Set State A False",
+        valueType: "boolean",
+        supportedBlockTypes: ["brr:logic_coop_manager_block"]
+    },
+    coopToggleStateA: {
+        label: "Coop: Toggle State A",
+        valueType: "boolean",
+        supportedBlockTypes: ["brr:logic_coop_manager_block"]
+    },
+    coopSetStateBTrue: {
+        label: "Coop: Set State B True",
+        valueType: "boolean",
+        supportedBlockTypes: ["brr:logic_coop_manager_block"]
+    },
+    coopSetStateBFalse: {
+        label: "Coop: Set State B False",
+        valueType: "boolean",
+        supportedBlockTypes: ["brr:logic_coop_manager_block"]
+    },
+    coopToggleStateB: {
+        label: "Coop: Toggle State B",
+        valueType: "boolean",
+        supportedBlockTypes: ["brr:logic_coop_manager_block"]
+    },
+    randomChanceTrigger: {
+        label: "Random: Chance Trigger",
+        valueType: "boolean",
+        supportedBlockTypes: ["brr:logic_random_outputs_block"]
     }
 };
 

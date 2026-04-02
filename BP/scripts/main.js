@@ -11,10 +11,21 @@ import { toolPlayerclipUI, applyPlayerclipRepel } from "./tool_ui/tool_playercli
 import { toolNpcclipUI, shouldEnableNpcclipCollision, applyNpcclipRepel } from "./tool_ui/tool_npcclip.js";
 import { triggerToolUI as showTriggerToolUI, fireOutputsForEvent, getNormalizedTriggerData, isBlockedTriggerCommand } from "./tool_ui/tool_trigger.js";
 import { blockParticles } from "./handler/block_particles.js";
+import "./handler/pet.js";
 import "./handler/gluon_gun.js";
 import "./handler/tau_cannon.js";
 import "./handler/crowbar.js";
 import "./handler/glock17.js";
+import "./handler/magnum357.js";
+import { logicAutoUI } from "./tool_ui/logic_auto.js";
+import { logicBranchUI } from "./tool_ui/logic_branch.js";
+import { logicCaseUI } from "./tool_ui/logic_case.js";
+import { logicCompareUI } from "./tool_ui/logic_compare.js";
+import { logicCoopManagerUI } from "./tool_ui/logic_coop_manager.js";
+import { logicRandomOutputsUI } from "./tool_ui/logic_random_outputs.js";
+import { logicTimerUI } from "./tool_ui/logic_timer.js";
+import { tickLogicBlocks } from "./handler/logic_blocks.js";
+import { outputClassInfoTargets } from "./tool_ui/output_ci_targets.js";
 
 const { world, system } = mc;
 const CommandPermissionLevel = mc.CommandPermissionLevel;
@@ -30,7 +41,7 @@ const playerclipPushCooldowns = new Map();
 const playerclipLastSafePositions = new Map();
 const npcclipRepelCooldowns = new Map();
 const npcclipLastSafePositions = new Map();
-const TOOL_BLOCK_TYPES = ["brr:tool_areaportal", "brr:info_playerspawn_block", "brr:tool_invisible", "brr:tool_trigger", "brr:info_target_areaportal_block", "brr:tool_blocklight", "brr:tool_playerclip", "brr:tool_npcclip", "brr:game_nametag_block"];
+const TOOL_BLOCK_TYPES = ["brr:tool_areaportal", "brr:info_playerspawn_block", "brr:tool_invisible", "brr:tool_trigger", "brr:info_target_areaportal_block", "brr:tool_blocklight", "brr:tool_playerclip", "brr:tool_npcclip", "brr:game_nametag_block", "brr:logic_auto_block", "brr:logic_branch_block", "brr:logic_case_block", "brr:logic_compare_block", "brr:logic_coop_manager_block", "brr:logic_random_outputs_block", "brr:logic_timer_block"];
 const COLLISION_BLOCK_TYPES = ["brr:tool_invisible", "brr:tool_playerclip", "brr:tool_npcclip"];
 const LIGHT_BLOCK_TYPES = ["brr:tool_blocklight"];
 const ITEM_TO_BLOCK_MAP = {
@@ -322,6 +333,10 @@ world.afterEvents.playerPlaceBlock.subscribe((data) => {
             }
         }
 
+        if (block.typeId === "brr:logic_timer_block") {
+            blocks[blocks.length - 1].data.startDisabled = true;
+        }
+
         saveLargeJSON("blocks", blocks);
     }
 })
@@ -597,8 +612,9 @@ function parseBooleanLike(value, defaultValue = false) {
     if (typeof value === "number") return value !== 0;
 
     const normalized = `${value ?? ""}`.trim().toLowerCase();
+    if (normalized === "") return defaultValue;
     if (["true", "1", "yes", "on"].includes(normalized)) return true;
-    if (["false", "0", "no", "off", ""].includes(normalized)) return false;
+    if (["false", "0", "no", "off"].includes(normalized)) return false;
     return defaultValue;
 }
 
@@ -682,6 +698,29 @@ function openToolUIForBlock(player, blockEntry) {
     const toolUI = blockToolUIs[blockEntry.typeId];
     if (typeof toolUI === "function") {
         toolUI(player, blockEntry, saveBlockEntry);
+        return;
+    }
+
+    const logicBlockUIs = {
+        "brr:logic_auto_block": logicAutoUI,
+        "brr:logic_branch_block": logicBranchUI,
+        "brr:logic_case_block": logicCaseUI,
+        "brr:logic_compare_block": logicCompareUI,
+        "brr:logic_coop_manager_block": logicCoopManagerUI,
+        "brr:logic_random_outputs_block": logicRandomOutputsUI,
+        "brr:logic_timer_block": logicTimerUI
+    };
+
+    const logicUI = logicBlockUIs[blockEntry.typeId];
+    if (typeof logicUI === "function") {
+        logicUI(player, blockEntry, {
+            onSave: saveBlockEntry,
+            conditionTools,
+            validateConditionRequirements,
+            getNamedTargetEntries,
+            getBlocksTargetingCurrent,
+            allInputs: outputClassInfoTargets
+        });
     }
 }
 
@@ -726,6 +765,18 @@ system.runInterval(() => {
             });
         }
     }
+}, 2);
+
+// SECTION: Logic Blocks Runtime Loop
+system.runInterval(() => {
+    if (!toolsEnabled) return;
+
+    const blocks = loadLargeJSON("blocks");
+    const logicBlocks = blocks.filter(b => b?.typeId?.startsWith("brr:logic_"));
+    if (logicBlocks.length === 0) return;
+
+    const outputRuntimeOptions = getOutputRuntimeOptions();
+    tickLogicBlocks(logicBlocks, outputRuntimeOptions, saveBlockEntry);
 }, 2);
 
 // SECTION: Npcclip Runtime Loop
