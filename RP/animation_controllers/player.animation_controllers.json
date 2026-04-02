@@ -1,0 +1,206 @@
+{
+  "format_version": "1.19.0",
+  "animation_controllers": {
+    "controller.animation.player.gun_setup": {
+      "initial_state": "default",
+      "states": {
+        "default": {
+          "transitions": [
+            {
+              "gluon_gun": "variable.gluon_gun_equipped"
+            }
+          ]
+        },
+        "gluon_gun": {
+          "animations": [
+            {
+              "gluon_gun_fp_controller": "c.is_first_person"
+            },
+            {
+              "gluon_gun_tp_controller": "!c.is_first_person"
+            }
+          ],
+          "transitions": [
+            {
+              "default": "!variable.gluon_gun_equipped"
+            }
+          ]
+        }
+      }
+    },
+    "controller.animation.player.gluon_gun_fp": {
+      "initial_state": "fp_select_gate",
+      "states": {
+        "fp_select_gate": {
+          "transitions": [
+            {
+              "fp_draw_admire": "math.random(0.0, 1.0) < 0.25"
+            },
+            {
+              "fp_draw": "1.0"
+            }
+          ]
+        },
+        "fp_draw_admire": {
+          "animations": [
+            "gluon_gun_fp_draw_admire"
+          ],
+          "transitions": [
+            {
+              "fp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "fp_draw": {
+          "animations": [
+            "gluon_gun_fp_draw"
+          ],
+          "transitions": [
+            {
+              "fp_fire": "query.is_using_item"
+            },
+            {
+              "fp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "fp_idle": {
+          "animations": [
+            "gluon_gun_fp_idle"
+          ],
+          "transitions": [
+            {
+              "fp_fire": "query.is_using_item"
+            },
+            {
+              "fp_idle_fidget": "query.anim_time >= 10.0 && math.random(0.0, 1.0) < 0.001"
+            }
+          ]
+        },
+        "fp_idle_fidget": {
+          "animations": [
+            "gluon_gun_fp_idle_fidget"
+          ],
+          "transitions": [
+            {
+              "fp_fire": "query.is_using_item"
+            },
+            {
+              "fp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "fp_fire": {
+          "animations": [
+            "gluon_gun_fp_fire"
+          ],
+          "transitions": [
+            {
+              "fp_fire_end": "!query.is_using_item"
+            }
+          ]
+        },
+        "fp_fire_end": {
+          "animations": [
+            "gluon_gun_fp_fire_end"
+          ],
+          "transitions": [
+            {
+              "fp_idle": "query.any_animation_finished"
+            }
+          ]
+        }
+      }
+    },
+    "controller.animation.player.gluon_gun_tp": {
+      "initial_state": "tp_select_gate",
+      "states": {
+        "tp_select_gate": {
+          "transitions": [
+            {
+              "tp_draw_admire": "math.random(0.0, 1.0) < 0.25"
+            },
+            {
+              "tp_draw": "1.0"
+            }
+          ]
+        },
+        "tp_draw_admire": {
+          "animations": [
+            "tp_egon_draw_admire",
+            "gluon_gun_tp_arm_isolation"
+          ],
+          "transitions": [
+            {
+              "tp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "tp_draw": {
+          "animations": [
+            "tp_egon_draw",
+            "gluon_gun_tp_arm_isolation"
+          ],
+          "transitions": [
+            {
+              "tp_fire": "query.is_using_item"
+            },
+            {
+              "tp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "tp_idle": {
+          "animations": [
+            "tp_egon_idle",
+            "gluon_gun_tp_arm_isolation"
+          ],
+          "transitions": [
+            {
+              "tp_fire": "query.is_using_item"
+            },
+            {
+              "tp_idle_fidget": "query.anim_time >= 10.0 && math.random(0.0, 1.0) < 0.001"
+            }
+          ]
+        },
+        "tp_idle_fidget": {
+          "animations": [
+            "tp_egon_idle_fidget",
+            "gluon_gun_tp_arm_isolation"
+          ],
+          "transitions": [
+            {
+              "tp_fire": "query.is_using_item"
+            },
+            {
+              "tp_idle": "query.any_animation_finished"
+            }
+          ]
+        },
+        "tp_fire": {
+          "animations": [
+            "tp_egon_fire",
+            "gluon_gun_tp_arm_isolation"
+          ],
+          "transitions": [
+            {
+              "tp_fire_end": "!query.is_using_item"
+            }
+          ]
+        },
+        "tp_fire_end": {
+          "animations": [
+            "tp_egon_fire_end",
+            "gluon_gun_tp_arm_isolation"
+          ],
+          "transitions": [
+            {
+              "tp_idle": "query.any_animation_finished"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

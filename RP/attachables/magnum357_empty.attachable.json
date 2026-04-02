@@ -1,0 +1,60 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "brr:magnum357_empty",
+      "materials": {
+        "default": "entity_alphatest",
+        "enchanted": "entity_alphatest_glint"
+      },
+      "textures": {
+        "default": "textures/models/magnum357",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.magnum357"
+      },
+      "animations": {
+        "fp_controller": "controller.animation.magnum357.firstPerson",
+        "tp_controller": "controller.animation.magnum357.thirdPerson",
+        "fp_idle": "animation.magnum357.fp_idle",
+        "fp_draw": "animation.magnum357.fp_draw",
+        "fp_draw_admire": "animation.magnum357.fp_draw_admire_clean",
+        "fp_idle_to_centerfire": "animation.magnum357.fp_idle_to_centerfire",
+        "fp_centerfire_idle": "animation.magnum357.fp_centerfire_idle",
+        "fp_fire1": "animation.magnum357.fp_idle",
+        "fp_fire2": "animation.magnum357.fp_idle",
+        "fp_centerfire1": "animation.magnum357.fp_idle",
+        "fp_centerfire2": "animation.magnum357.fp_idle",
+        "fp_centerfire_to_idle": "animation.magnum357.fp_centerfire_to_idle",
+        "fp_idle_fidget": "animation.magnum357.fp_idle_fidget",
+        "fp_reload": "animation.magnum357.fp_reload_clean",
+        "tp_idle": "animation.magnum357.tp_idle",
+        "tp_draw": "animation.magnum357.tp_draw",
+        "tp_draw_admire": "animation.magnum357.tp_draw_admire",
+        "tp_idle_to_centerfire": "animation.magnum357.tp_idle_to_centerfire",
+        "tp_centerfire_idle": "animation.magnum357.tp_centerfire_idle",
+        "tp_fire1": "animation.magnum357.tp_idle",
+        "tp_fire2": "animation.magnum357.tp_idle",
+        "tp_centerfire1": "animation.magnum357.tp_idle",
+        "tp_centerfire2": "animation.magnum357.tp_idle",
+        "tp_centerfire_to_idle": "animation.magnum357.tp_centerfire_to_idle",
+        "tp_idle_fidget": "animation.magnum357.tp_idle_fidget",
+        "tp_reload": "animation.magnum357.tp_reload"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "fp_controller": "c.is_first_person"
+          },
+          {
+            "tp_controller": "!c.is_first_person"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.item_default"
+      ]
+    }
+  }
+}
