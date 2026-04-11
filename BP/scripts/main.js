@@ -28,6 +28,8 @@ import { tickLogicBlocks } from "./handler/logic_blocks.js";
 import { outputClassInfoTargets } from "./tool_ui/output_ci_targets.js";
 
 const { world, system } = mc;
+const GameMode = mc.GameMode;
+const PlayerPermissionLevel = mc.PlayerPermissionLevel;
 const CommandPermissionLevel = mc.CommandPermissionLevel;
 const CustomCommandParamType = mc.CustomCommandParamType;
 
@@ -123,68 +125,15 @@ function getActiveVisibleBlockTypes() {
 
 // SECTION: Player & Proximity Helpers
 function isPlayerInCreative(player) {
-    if (!player) return false;
-
-    if (typeof player.getGameMode === "function") {
-        try {
-            return `${player.getGameMode()}`.toLowerCase() === "creative";
-        } catch { }
-    }
-
-    try {
-        return (player.runCommand("testfor @s[m=creative]")?.successCount ?? 0) > 0;
-    } catch { }
-
-    try {
-        return (player.runCommand("testfor @s[m=1]")?.successCount ?? 0) > 0;
-    } catch { }
-
-    return false;
+    return player?.getGameMode?.() === GameMode.Creative;
 }
 
 function isPlayerOperator(player) {
-    if (!player) return false;
-
-    if (typeof player.isOp === "function") {
-        try {
-            return Boolean(player.isOp());
-        } catch { }
-    }
-
-    try {
-        return (player.runCommand("testfor @s[haspermission={operator=true}]")?.successCount ?? 0) > 0;
-    } catch { }
-
-    return false;
+    return player?.playerPermissionLevel === PlayerPermissionLevel.Operator;
 }
 
 function getPlayerGameMode(player) {
-    if (!player) return "";
-
-    if (typeof player.getGameMode === "function") {
-        try {
-            return `${player.getGameMode()}`.trim().toLowerCase();
-        } catch { }
-    }
-
-    const modeChecks = [
-        ["survival", "testfor @s[m=survival]", "testfor @s[m=0]"],
-        ["creative", "testfor @s[m=creative]", "testfor @s[m=1]"],
-        ["adventure", "testfor @s[m=adventure]", "testfor @s[m=2]"],
-        ["spectator", "testfor @s[m=spectator]", "testfor @s[m=6]"]
-    ];
-
-    for (const [modeName, ...tests] of modeChecks) {
-        for (const test of tests) {
-            try {
-                if ((player.runCommand(test)?.successCount ?? 0) > 0) {
-                    return modeName;
-                }
-            } catch { }
-        }
-    }
-
-    return "";
+    return player?.getGameMode?.().toLowerCase() ?? "";
 }
 
 function isPositionNearBlock(pos, block, expand = 0.35) {
