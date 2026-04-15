@@ -16,6 +16,7 @@ export let outputClassInfoTargets = [
     "playerspawnWorldSpawnAtBlock",
     "playerspawnWorldSpawn",
     "playerspawnSetsPlayerSpawnPoint",
+    "playerspawnSelectors",
 
     "playerclipExcludeOperators",
     "playerclipExcludeGamemode",
@@ -104,6 +105,11 @@ export const outputTargetMetadata = {
     playerspawnSetsPlayerSpawnPoint: {
         label: "Playerspawn: Set player spawn point",
         valueType: "boolean",
+        supportedBlockTypes: ["brr:info_playerspawn_block"]
+    },
+    playerspawnSelectors: {
+        label: "Playerspawn: Selectors",
+        valueType: "string",
         supportedBlockTypes: ["brr:info_playerspawn_block"]
     },
     playerclipExcludeOperators: {

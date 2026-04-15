@@ -3,11 +3,13 @@ import { addDecorativeSection } from "./ui_formatting.js";
 import { conditionTools } from "./conditions_tools.js";
 import { buildOutputSection, buildExistingOutputsSection, buildInputsSection, parseOutputResponse } from "./shared_output_ui.js";
 
+// SECTION: Output Definitions
 export const LOGIC_CASE_OUTPUT_TYPES = [
 	"onCase1", "onCase2", "onCase3", "onCase4", "onCase5", "onCase6", "onCase7", "onCase8",
 	"onCase9", "onCase10", "onCase11", "onCase12", "onCase13", "onCase14", "onCase15", "onCase16"
 ];
 
+// SECTION: Logic Case UI
 export function logicCaseUI(player, blockEntry, options) {
 	const { onSave, getNamedTargetEntries, getBlocksTargetingCurrent, allInputs, validateConditionRequirements } = options;
 	if (!blockEntry.data) blockEntry.data = {};
@@ -58,6 +60,7 @@ export function logicCaseUI(player, blockEntry, options) {
 
 	form.submitButton("Save");
 
+	// SECTION: Form Submission Handling
 	form.show(player).then((response) => {
 		if (response.canceled) return;
 		const formValues = (response.formValues ?? []).filter(v => v !== undefined && v !== null);

@@ -1,5 +1,6 @@
 import { world } from "@minecraft/server";
 
+// SECTION: Block and Entity Helpers
 function parseBlockPos(rawValue) {
 	const coords = (rawValue || "").trim().split(/\s+/);
 	if (coords.length !== 3) return null;
@@ -24,6 +25,7 @@ const lastKnownHealthByEntity = new Map();
 const lastDamageTickByEntity = new Map();
 const lastDamageCauseByEntity = new Map();
 
+// SECTION: Damage Tracking
 function getEntityIdentity(entity) {
 	if (!entity) return "";
 	return `${entity.id ?? entity.nameTag ?? entity.name ?? ""}`;
@@ -42,6 +44,7 @@ try {
 	});
 } catch { }
 
+// SECTION: Scoreboard and Tick Helpers
 function getObjective(worldObj, objectiveName) {
 	try {
 		return worldObj.scoreboard.getObjective(objectiveName);
@@ -80,6 +83,7 @@ function getCurrentTick(worldObj) {
 }
 
 function wasEntityRecentlyDamaged(entity, worldObj, windowTicks = 2) {
+// SECTION: Inventory and Selector Helpers
 	const id = getEntityIdentity(entity);
 	if (!id) return false;
 
@@ -146,8 +150,15 @@ function getPlayerItemCountLike(entity, itemTypeId) {
 	return countInventoryItems(entity, normalizedTypeId);
 }
 
+function normalizeLiteralSelector(rawSelector) {
+	const raw = `${rawSelector ?? ""}`.trim();
+	const quoted = raw.match(/^(["'])(.*)\1$/);
+	return `${quoted ? quoted[2] : raw}`.trim();
+}
+
 function resolveEntitiesBySelector(player, selectorRaw, radiusRaw = "") {
 	const selector = `${selectorRaw ?? ""}`.trim();
+	const literalSelector = normalizeLiteralSelector(selector);
 	if (!selector) return [];
 
 	const optionalRadius = parseOptionalInt(radiusRaw);
@@ -178,26 +189,30 @@ function resolveEntitiesBySelector(player, selectorRaw, radiusRaw = "") {
 		if (selector === "@e") return player.dimension.getEntities().filter(withinRadius);
 	} catch { }
 
-	if (selector.startsWith("minecraft:")) {
+	if (literalSelector.toLowerCase().startsWith("minecraft:")) {
 		try {
-			return player.dimension.getEntities({ type: selector }).filter(withinRadius);
+			return player.dimension.getEntities({ type: literalSelector }).filter(withinRadius);
 		} catch { }
 	}
 
 	try {
-		const playersByName = player.dimension.getPlayers({ name: selector }).filter(withinRadius);
+		const playersByName = player.dimension.getPlayers({ name: literalSelector }).filter(withinRadius);
 		if (playersByName.length) return playersByName;
 	} catch { }
 
 	try {
-		return player.dimension.getEntities().filter(entity =>
-			(entity.nameTag === selector || entity.typeId === selector) && withinRadius(entity)
-		);
+		const expected = literalSelector.toLowerCase();
+		return player.dimension.getEntities().filter(entity => {
+			const nameTag = `${entity.nameTag ?? ""}`.trim().toLowerCase();
+			const typeId = `${entity.typeId ?? ""}`.trim().toLowerCase();
+			return (nameTag === expected || typeId === expected) && withinRadius(entity);
+		});
 	} catch {
 		return [];
 	}
 }
 
+// SECTION: Platform and Equipment Helpers
 function isPlatformGroup(player, group) {
 	const platform = `${player?.clientSystemInfo?.platformType ?? player?.clientSystemInfo?.platform ?? ""}`.toLowerCase();
 	if (!platform) return false;
@@ -267,6 +282,7 @@ function getPlayerItemCount(player, itemTypeId) {
 	return total;
 }
 
+// SECTION: Weather and Time Helpers
 function readWeatherName(worldObj) {
 	if (typeof worldObj.isThundering === "boolean" && worldObj.isThundering) return "thunder";
 	if (typeof worldObj.isRaining === "boolean") return worldObj.isRaining ? "rain" : "clear";

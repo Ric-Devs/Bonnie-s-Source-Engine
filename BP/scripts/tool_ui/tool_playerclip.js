@@ -5,6 +5,12 @@ import { addDecorativeSection, addReadOnlyListSection } from "./ui_formatting.js
 // SECTION: Playerclip Config
 const gamemodeOptions = ["none", "survival", "creative", "adventure", "spectator"];
 
+function normalizeLiteralSelector(value) {
+    const raw = `${value ?? ""}`.trim();
+    const quoted = raw.match(/^(["'])(.*)\1$/);
+    return `${quoted ? quoted[2] : raw}`.trim().toLowerCase();
+}
+
 // SECTION: Playerclip Runtime Helpers
 export function selectorTargetsPlayer(selectorRaw, player, block, options) {
     const selector = `${selectorRaw ?? ""}`.trim();
@@ -14,9 +20,9 @@ export function selectorTargetsPlayer(selectorRaw, player, block, options) {
     const { parseSelectorFilters, applyEntityFilters } = options ?? {};
 
     if (!normalized.startsWith("@")) {
-        const expected = normalized;
-        const playerName = `${player.name ?? ""}`.trim().toLowerCase();
-        const tagName = `${player.nameTag ?? ""}`.trim().toLowerCase();
+        const expected = normalizeLiteralSelector(selector);
+        const playerName = normalizeLiteralSelector(player?.name);
+        const tagName = normalizeLiteralSelector(player?.nameTag);
         return expected === playerName || expected === tagName;
     }
 

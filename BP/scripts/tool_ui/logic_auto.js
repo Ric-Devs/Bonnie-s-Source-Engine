@@ -2,8 +2,10 @@ import { ModalFormData } from "@minecraft/server-ui";
 import { addDecorativeSection } from "./ui_formatting.js";
 import { buildOutputSection, buildExistingOutputsSection, buildInputsSection, parseOutputResponse } from "./shared_output_ui.js";
 
+// SECTION: Output Definitions
 export const LOGIC_AUTO_OUTPUT_TYPES = ["onAutoFire"];
 
+// SECTION: Logic Auto UI
 export function logicAutoUI(player, blockEntry, options) {
 	const { onSave, getNamedTargetEntries, getBlocksTargetingCurrent, allInputs } = options;
 	if (!blockEntry.data) blockEntry.data = {};
@@ -56,6 +58,7 @@ export function logicAutoUI(player, blockEntry, options) {
 
 	form.submitButton("Save");
 
+	// SECTION: Form Submission Handling
 	form.show(player).then((response) => {
 		if (response.canceled) return;
 		const formValues = (response.formValues ?? []).filter(v => v !== undefined && v !== null);

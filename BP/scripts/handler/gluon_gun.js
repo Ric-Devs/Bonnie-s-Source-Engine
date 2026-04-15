@@ -2,6 +2,7 @@ import { world, system, EntityDamageCause } from "@minecraft/server";
 import { renderGluonBeamVisual } from "./gluon_beam_visual.js";
 import { consumeAmmo, getAmmoRemaining, playEmptySound } from "./ammo_system.js";
 
+// SECTION: Gluon Constants
 const GLUON_ITEM_ID = "brr:gluon_gun";
 const GLUON_AURA_PARTICLE = "brr:gluon_beam_aura";
 const GLUON_CORE_PARTICLE = "brr:gluon_beam_core";
@@ -43,6 +44,7 @@ const GLUON_DISINTEGRATE_PARTICLES_PER_PASS = 18;
 const DEBUG_ENABLED = false;
 const DEBUG_ACTIONBAR_INTERVAL_TICKS = 6;
 
+// SECTION: Gluon Runtime State
 const activeFireStateByPlayer = new Map();
 const lastDamageTickByPair = new Map();
 const lastHitSoundTickByPair = new Map();
@@ -53,6 +55,7 @@ const recentGluonHitByTarget = new Map();
 const debugLastActionbarTickByPlayer = new Map();
 const debugLastEventByPlayer = new Map();
 
+// SECTION: Shared Helpers
 function playSoundForPlayer(player, soundId) {
     if (!player?.id || !soundId) return;
 
@@ -153,6 +156,7 @@ function isHoldingGluon(player) {
     return isGluonItem(getMainhandTypeId(player));
 }
 
+// SECTION: Firing State Helpers
 function beginFiring(player, continuous) {
     if (!player?.id) return;
 
@@ -230,6 +234,7 @@ function finishUseTracking(player) {
     if (!isHoldingGluon(player)) return;
 }
 
+// SECTION: Debug Helpers
 function debugActionbar(player, message, force = false) {
     if (!DEBUG_ENABLED || !player?.id) return;
 
@@ -260,6 +265,7 @@ function debugSetEvent(player, eventName) {
     debugActionbar(player, `event=${label}`, true);
 }
 
+// SECTION: Beam Math and Targeting
 function lengthOf(vector) {
     return Math.sqrt((vector.x * vector.x) + (vector.y * vector.y) + (vector.z * vector.z));
 }
@@ -502,6 +508,7 @@ function getDirectionToTarget(origin, targetPoint, fallbackDirection) {
     return normalize(toTarget);
 }
 
+// SECTION: Beam Damage and Effects
 function getFirstBlockingBlockHit(dimension, origin, direction, maxDistance) {
     try {
         return dimension.getBlockFromRay(origin, direction, {
@@ -674,6 +681,7 @@ function startGluonDisintegrationEffect(dimension, center) {
     }
 }
 
+// SECTION: Event Wiring
 function subscribeAfterEvent(signalName, callback) {
     try {
         const signal = world.afterEvents?.[signalName];
@@ -823,6 +831,7 @@ subscribeAfterEvent("entityDie", (eventData) => {
     startGluonDisintegrationEffect(dimension, center);
 });
 
+// SECTION: Runtime Tick
 system.runInterval(() => {
     const tick = getCurrentTick();
     const onlinePlayerIds = new Set();

@@ -1,5 +1,6 @@
 import { world, system, EntityDamageCause } from "@minecraft/server";
 
+// SECTION: Crowbar Constants
 const CROWBAR_ITEM_ID = "brr:crowbar";
 const CROWBAR_DAMAGE = 5;
 const CROWBAR_COOLDOWN_TICKS = 10;
@@ -17,10 +18,12 @@ const CROWBAR_MISS_SOUNDS = [
     "weapons.crowbar.miss3"
 ];
 
+// SECTION: Crowbar Runtime State
 const cooldownUntilTickByPlayer = new Map();
 const heldUseByPlayer = new Map();
 const nextHeldAttackTickByPlayer = new Map();
 
+// SECTION: Shared Helpers
 function getCurrentTick() {
     try {
         const tick = Number(system?.currentTick);
@@ -51,6 +54,7 @@ function isHoldingCrowbar(player) {
     return getMainhandTypeId(player) === CROWBAR_ITEM_ID;
 }
 
+// SECTION: Hit Detection
 function lengthOf(vector) {
     return Math.sqrt((vector.x * vector.x) + (vector.y * vector.y) + (vector.z * vector.z));
 }
@@ -181,6 +185,7 @@ function findCrowbarHitTarget(player) {
     return closestHit?.entity ?? null;
 }
 
+// SECTION: Damage and Audio
 function applyCrowbarDamage(attacker, target) {
     if (!attacker?.id || !target?.id) return false;
 
@@ -220,6 +225,7 @@ function playSwingSound(player, didHit) {
     } catch { }
 }
 
+// SECTION: Input Helpers
 function handleCrowbarSwing(player) {
     if (!player?.id || !isHoldingCrowbar(player)) return;
 
@@ -257,6 +263,7 @@ function getEventItemTypeId(eventData) {
     return `${eventData?.itemStack?.typeId ?? eventData?.item?.typeId ?? ""}`.trim().toLowerCase();
 }
 
+// SECTION: Event Wiring
 world.afterEvents.playerSwingStart.subscribe((eventData) => {
     const player = eventData?.player ?? eventData?.source ?? eventData?.sourceEntity;
     if (!isPlayerEntity(player)) return;
@@ -299,6 +306,7 @@ world.afterEvents.itemReleaseUse.subscribe((eventData) => {
     endHeldUse(player);
 });
 
+// SECTION: Runtime Tick
 system.runInterval(() => {
     const tick = getCurrentTick();
     const onlinePlayerIds = new Set();

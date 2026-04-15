@@ -1,5 +1,6 @@
 import { world, system, EntityDamageCause, ItemStack } from "@minecraft/server";
 
+// SECTION: Magnum Constants
 const MAGNUM_ITEM_ID = "brr:magnum357";
 const MAGNUM_EMPTY_ITEM_ID = "brr:magnum357_empty";
 const MAGNUM_AMMO_ITEM_ID = "brr:357_ammobox";
@@ -10,7 +11,7 @@ const MAGNUM_MAX_DISTANCE = 128;
 const MAGNUM_HIT_RADIUS = 0.9;
 const MIN_SHOT_INTERVAL_TICKS = 6;
 const RELOAD_LOCK_TICKS = 87;
-const RELOAD_HOLD_THRESHOLD_TICKS = 10;
+const RELOAD_HOLD_THRESHOLD_TICKS = 20;
 
 const EMPTY_SOUND = "weapons.gauss.empty";
 const FIRE_SOUND = "weapons.357.fire";
@@ -25,6 +26,7 @@ const IDLE_FIDGET_MIN_INTERVAL_TICKS = 200;
 const IDLE_FIDGET_MAX_INTERVAL_TICKS = 340;
 const HUD_UPDATE_INTERVAL_TICKS = 2;
 
+// SECTION: Magnum Runtime State
 const rightClickUseStartTickByPlayer = new Map();
 const rightClickUseReloadTriggeredByPlayer = new Set();
 const lastShotTickByPlayer = new Map();
@@ -37,6 +39,7 @@ const nextIdleFidgetSoundTickByPlayer = new Map();
 const lastAmmoHudTextByPlayer = new Map();
 const lastAmmoHudTickByPlayer = new Map();
 
+// SECTION: Shared Helpers
 function getCurrentTick() {
     try {
         const tick = Number(system?.currentTick);
@@ -118,6 +121,7 @@ function playSoundForPlayer(player, soundId) {
     } catch { }
 }
 
+// SECTION: Ammo and Reload Helpers
 function getLoadedRounds(player) {
     if (!player?.id) return 0;
 
@@ -299,6 +303,7 @@ function tryReload(player) {
     return true;
 }
 
+// SECTION: Shot Geometry Helpers
 function lengthOf(vector) {
     return Math.sqrt((vector.x * vector.x) + (vector.y * vector.y) + (vector.z * vector.z));
 }
@@ -501,6 +506,7 @@ function fireMagnumShot(player) {
     return true;
 }
 
+// SECTION: Input Helpers
 function beginRightClickUse(player) {
     if (!player?.id || !isHoldingMagnum(player)) return;
     rightClickUseStartTickByPlayer.set(player.id, getCurrentTick());
@@ -533,6 +539,7 @@ function finalizeRightClickUse(player) {
     fireMagnumShot(player);
 }
 
+// SECTION: Event Wiring
 world.afterEvents.itemStartUse.subscribe((eventData) => {
     const player = getEventSourcePlayer(eventData);
     if (!isPlayerEntity(player)) return;
@@ -557,6 +564,7 @@ world.afterEvents.itemReleaseUse.subscribe((eventData) => {
     finalizeRightClickUse(player);
 });
 
+// SECTION: Runtime Tick
 system.runInterval(() => {
     const tick = getCurrentTick();
     const onlinePlayerIds = new Set();
@@ -605,8 +613,10 @@ system.runInterval(() => {
         if (Number.isFinite(rightClickStartTick)
             && !rightClickUseReloadTriggeredByPlayer.has(player.id)
             && (tick - rightClickStartTick) >= RELOAD_HOLD_THRESHOLD_TICKS) {
-            tryReload(player);
-            rightClickUseReloadTriggeredByPlayer.add(player.id);
+            const reloadStarted = tryReload(player);
+            if (reloadStarted) {
+                rightClickUseReloadTriggeredByPlayer.add(player.id);
+            }
         }
 
         if (!isSneaking(player)) {

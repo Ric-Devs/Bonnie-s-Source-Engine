@@ -1,36 +1,52 @@
 import { system, world } from "@minecraft/server";
 
+// SECTION: Item and Property Constants
 const COLLAR_ITEM = "brr:collar";
 const LEASH_ITEM = "brr:leash";
-const SHOULDER_ITEM = "brr:sit";
+const SIT_ITEM = "brr:sit";
 
 const DP_COLLARED = "brr_collared";
 const DP_OWNER_ID = "brr_owner_id";
+const WORLD_PET_STATE = "brr_pet_state";
 
-const NUDGE_DISTANCE = 6;
-const TELEPORT_DISTANCE = 20;
-const NUDGE_DISTANCE_SQUARED = NUDGE_DISTANCE * NUDGE_DISTANCE;
-const TELEPORT_DISTANCE_SQUARED = TELEPORT_DISTANCE * TELEPORT_DISTANCE;
+// SECTION: Ride Rules
+const BONNIE_USERNAME = "bonnierobloxrip";
+const MARSHMALLOW_USERNAME = "marshmallow997";
+const RIDE_DENIED_MESSAGE = "You are not allowed to ride other players.";
+
+// SECTION: Leash Follow Tuning
+const LEASH_PULL_DISTANCE = 2.5;
+const LEASH_STRONG_PULL_DISTANCE = 10;
+const LEASH_HARD_PULL_DISTANCE = 18;
+const LEASH_PULL_DISTANCE_SQUARED = LEASH_PULL_DISTANCE * LEASH_PULL_DISTANCE;
+const LEASH_STRONG_PULL_DISTANCE_SQUARED = LEASH_STRONG_PULL_DISTANCE * LEASH_STRONG_PULL_DISTANCE;
+const LEASH_HARD_PULL_DISTANCE_SQUARED = LEASH_HARD_PULL_DISTANCE * LEASH_HARD_PULL_DISTANCE;
+
+// SECTION: Interaction Tuning
+const INTERACTION_DEDUPE_WINDOW_TICKS = 2;
 
 let tickCount = 0;
 
+// SECTION: Runtime State
 const fallbackCollaredState = new Map();
 const fallbackOwnerState = new Map();
+const recentInteractionTickByKey = new Map();
+let cachedPetStateByPlayerId;
 
 async function triggerPetEvent(entity, eventName) {
   if (!entity || !eventName) return;
 
   try {
-    if (typeof entity.triggerEvent === "function") {
-      entity.triggerEvent(eventName);
-      return;
-    }
+    await entity.runCommandAsync(`event entity @s ${eventName}`);
+    return;
   } catch {
-    // Fall back to command-based trigger below.
+    // Fall through to direct script event dispatch below.
   }
 
   try {
-    await entity.runCommandAsync(`event entity @s ${eventName}`);
+    if (typeof entity.triggerEvent === "function") {
+      entity.triggerEvent(eventName);
+    }
   } catch {
     // Ignore if runtime cannot dispatch this event via script.
   }
@@ -38,6 +54,67 @@ async function triggerPetEvent(entity, eventName) {
 
 function getPlayers() {
   return world.getAllPlayers();
+}
+
+function loadPetStateByPlayerId() {
+  if (cachedPetStateByPlayerId) return cachedPetStateByPlayerId;
+
+  try {
+    const raw = world.getDynamicProperty(WORLD_PET_STATE);
+    if (typeof raw === "string" && raw.length > 0) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object") {
+        cachedPetStateByPlayerId = parsed;
+        return cachedPetStateByPlayerId;
+      }
+    }
+  } catch {
+    // Ignore malformed persistence and start fresh.
+  }
+
+  cachedPetStateByPlayerId = {};
+  return cachedPetStateByPlayerId;
+}
+
+function savePetStateByPlayerId() {
+  if (!cachedPetStateByPlayerId) return;
+
+  try {
+    const raw = JSON.stringify(cachedPetStateByPlayerId);
+    world.setDynamicProperty(WORLD_PET_STATE, raw === "{}" ? undefined : raw);
+  } catch {
+    // Ignore persistence failures and keep runtime state alive.
+  }
+}
+
+function getPersistedPetState(playerId) {
+  if (!playerId) return undefined;
+  const state = loadPetStateByPlayerId()[playerId];
+  return state && typeof state === "object" ? state : undefined;
+}
+
+function updatePersistedPetState(playerId, updater) {
+  if (!playerId) return;
+
+  const petStateByPlayerId = loadPetStateByPlayerId();
+  const currentState = getPersistedPetState(playerId) ?? {};
+  const nextState = updater({ ...currentState }) ?? {};
+  const hasCollared = typeof nextState.collared === "boolean";
+  const hasOwner = typeof nextState.ownerId === "string" && nextState.ownerId.length > 0;
+
+  if (!hasCollared && !hasOwner) {
+    delete petStateByPlayerId[playerId];
+  } else {
+    petStateByPlayerId[playerId] = {};
+    if (hasCollared) {
+      petStateByPlayerId[playerId].collared = nextState.collared;
+    }
+    if (hasOwner) {
+      petStateByPlayerId[playerId].ownerId = nextState.ownerId;
+    }
+  }
+
+  savePetStateByPlayerId();
 }
 
 function getSelectedItemType(player) {
@@ -48,6 +125,30 @@ function getSelectedItemType(player) {
     return container.getItem(player.selectedSlotIndex)?.typeId;
   } catch {
     return undefined;
+  }
+}
+
+function getPlayerUsername(player) {
+  return `${player?.name ?? player?.nameTag ?? ""}`.trim().toLowerCase();
+}
+
+function canPlayersRideEachOther(rider, mount) {
+  const riderName = getPlayerUsername(rider);
+  const mountName = getPlayerUsername(mount);
+
+  if (!riderName || !mountName) return false;
+
+  return (
+    (riderName === MARSHMALLOW_USERNAME && mountName === BONNIE_USERNAME) ||
+    (riderName === BONNIE_USERNAME && mountName === MARSHMALLOW_USERNAME)
+  );
+}
+
+function sendRideDenied(player) {
+  try {
+    player?.sendMessage(RIDE_DENIED_MESSAGE);
+  } catch {
+    // Ignore messaging failures on older runtimes.
   }
 }
 
@@ -92,12 +193,22 @@ function getCollaredState(player) {
     // Ignore and use fallback state map.
   }
 
+  const persisted = getPersistedPetState(player.id);
+  if (typeof persisted?.collared === "boolean") {
+    fallbackCollaredState.set(player.id, persisted.collared);
+    return persisted.collared;
+  }
+
   return fallbackCollaredState.get(player.id) ?? false;
 }
 
 function setCollaredState(player, collared) {
   if (!player?.id) return;
   fallbackCollaredState.set(player.id, collared);
+  updatePersistedPetState(player.id, (state) => {
+    state.collared = collared;
+    return state;
+  });
 
   try {
     player.setDynamicProperty(DP_COLLARED, collared);
@@ -119,6 +230,12 @@ function getOwnerId(pet) {
     // Ignore and use fallback state map.
   }
 
+  const persisted = getPersistedPetState(pet.id);
+  if (typeof persisted?.ownerId === "string" && persisted.ownerId.length > 0) {
+    fallbackOwnerState.set(pet.id, persisted.ownerId);
+    return persisted.ownerId;
+  }
+
   return fallbackOwnerState.get(pet.id);
 }
 
@@ -130,6 +247,15 @@ function setOwnerId(pet, ownerId) {
   } else {
     fallbackOwnerState.set(pet.id, ownerId);
   }
+
+  updatePersistedPetState(pet.id, (state) => {
+    if (ownerId) {
+      state.ownerId = ownerId;
+    } else {
+      delete state.ownerId;
+    }
+    return state;
+  });
 
   try {
     setOrClearStringProperty(pet, DP_OWNER_ID, ownerId);
@@ -161,6 +287,12 @@ function clearCachedState(playerId) {
   if (!playerId) return;
   fallbackCollaredState.delete(playerId);
   fallbackOwnerState.delete(playerId);
+
+  for (const key of recentInteractionTickByKey.keys()) {
+    if (key.startsWith(`${playerId}|`) || key.includes(`|${playerId}|`)) {
+      recentInteractionTickByKey.delete(key);
+    }
+  }
 }
 
 function unleash(pet) {
@@ -217,6 +349,31 @@ async function dismount(player) {
   }
 }
 
+function getHeldItemType(player, itemStack) {
+  return itemStack?.typeId ?? getMainhandItemType(player) ?? getSelectedItemType(player);
+}
+
+function getInteractionTick() {
+  return typeof system.currentTick === "number" ? system.currentTick : tickCount;
+}
+
+function shouldSkipInteraction(source, target, held) {
+  const sourceId = source?.id;
+  const targetId = target?.id;
+  if (!sourceId || !targetId) return false;
+
+  const key = `${sourceId}|${targetId}|${held ?? "none"}`;
+  const now = getInteractionTick();
+  const previous = recentInteractionTickByKey.get(key);
+
+  if (typeof previous === "number" && (now - previous) <= INTERACTION_DEDUPE_WINDOW_TICKS) {
+    return true;
+  }
+
+  recentInteractionTickByKey.set(key, now);
+  return false;
+}
+
 function getRideTarget(player) {
   try {
     return player.getComponent("minecraft:riding")?.entityRidingOn;
@@ -242,13 +399,34 @@ function applyCollarState(player, collared) {
   }
 }
 
-world.afterEvents.playerSpawn.subscribe((event) => {
-  if (!event.initialSpawn) return;
+function scheduleRideableBaseline(player, delay = 1) {
+  if (!player?.id) return;
+
   system.runTimeout(() => {
-    void triggerPetEvent(event.player, "brr:rideable_default");
-    void triggerPetEvent(event.player, "brr:shoulders_off");
-  }, 1);
+    if (!player?.isValid) return;
+
+    void triggerPetEvent(player, "brr:rideable_default");
+
+    if (!getRideTarget(player)) {
+      void triggerPetEvent(player, "brr:shoulders_off");
+    }
+
+    const collared = getCollaredState(player) || isWearingCollar(player);
+    if (collared) {
+      void triggerPetEvent(player, "brr:collar_on");
+    }
+  }, delay);
+}
+
+world.afterEvents.playerSpawn.subscribe((event) => {
+  scheduleRideableBaseline(event.player, event.initialSpawn ? 1 : 2);
 });
+
+system.runTimeout(() => {
+  for (const player of getPlayers()) {
+    scheduleRideableBaseline(player, 1);
+  }
+}, 1);
 
 world.afterEvents?.playerLeave?.subscribe((event) => {
   clearCachedState(event?.playerId);
@@ -270,9 +448,14 @@ async function handlePlayerInteraction(source, target, held) {
     return;
   }
 
-  if (held === SHOULDER_ITEM) {
+  if (held === SIT_ITEM) {
     if (!targetIsCollared) {
       source.sendMessage("You can only use the sit item on collared players.");
+      return;
+    }
+
+    if (!canPlayersRideEachOther(target, source)) {
+      sendRideDenied(source);
       return;
     }
 
@@ -286,19 +469,23 @@ async function handlePlayerInteraction(source, target, held) {
     return;
   }
 
-  if (!sourceIsCollared) return;
+  if (sourceIsCollared) {
+    if (!canPlayersRideEachOther(source, target)) {
+      sendRideDenied(source);
+      return;
+    }
 
-  const owner = getOwnerForPet(source);
-  if (owner && owner.id !== target.id) {
-    source.sendMessage("You are leashed and can only shoulder-sit your owner.");
-    return;
+    const owner = getOwnerForPet(source);
+    if (owner && owner.id !== target.id) {
+      source.sendMessage("You are leashed and can only shoulder-sit your owner.");
+      return;
+    }
+
+    await mountRider(source, target);
   }
-
-  await mountRider(source, target);
 }
 
 const beforeInteractWithEntitySignal = world.beforeEvents?.playerInteractWithEntity;
-const interactWithEntitySignal = world.afterEvents?.playerInteractWithEntity;
 
 if (beforeInteractWithEntitySignal) {
   beforeInteractWithEntitySignal.subscribe((event) => {
@@ -306,10 +493,14 @@ if (beforeInteractWithEntitySignal) {
     const target = event.target;
     if (!source || !target || !isPlayerEntity(target) || source.id === target.id) return;
 
-    const held = event.itemStack?.typeId ?? getMainhandItemType(source) ?? getSelectedItemType(source);
-    if (held !== LEASH_ITEM && held !== SHOULDER_ITEM) return;
+    const held = getHeldItemType(source, event.itemStack);
+    const sourceIsCollared = getCollaredState(source) || isWearingCollar(source);
+    const usesPetItem = held === LEASH_ITEM || held === SIT_ITEM;
+    if (!sourceIsCollared && !usesPetItem) return;
 
     event.cancel = true;
+
+    if (shouldSkipInteraction(source, target, held)) return;
 
     system.run(() => {
       void handlePlayerInteraction(source, target, held);
@@ -317,36 +508,18 @@ if (beforeInteractWithEntitySignal) {
   });
 }
 
-if (interactWithEntitySignal) {
-  interactWithEntitySignal.subscribe(async (event) => {
-    const source = event.player;
-    const target = event.target;
-    const held = event.itemStack?.typeId ?? getMainhandItemType(source) ?? getSelectedItemType(source);
-    if (beforeInteractWithEntitySignal && (held === LEASH_ITEM || held === SHOULDER_ITEM)) return;
-    await handlePlayerInteraction(source, target, held);
-  });
-}
-
-if (!interactWithEntitySignal) {
-  world.afterEvents.itemUse.subscribe(async (event) => {
-    const source = event.source;
-    const held = event.itemStack?.typeId ?? getMainhandItemType(source) ?? getSelectedItemType(source);
-    const sourceIsCollared = getCollaredState(source) || isWearingCollar(source);
-    if (!sourceIsCollared && held !== LEASH_ITEM && held !== SHOULDER_ITEM) return;
-
-    try {
-      const hits = source.getEntitiesFromViewDirection({ maxDistance: 6 });
-      const hit = hits.find((h) => isPlayerEntity(h.entity) && h.entity.id !== source.id);
-      if (!hit?.entity) return;
-      await handlePlayerInteraction(source, hit.entity, held);
-    } catch {
-      // Older runtimes might not support view-direction queries.
-    }
-  });
-}
-
 system.runInterval(() => {
   tickCount++;
+
+  if (tickCount % 40 === 0) {
+    const cutoff = tickCount - 80;
+    for (const [key, seenTick] of recentInteractionTickByKey.entries()) {
+      if (seenTick < cutoff) {
+        recentInteractionTickByKey.delete(key);
+      }
+    }
+  }
+
   const players = getPlayers();
 
   for (const player of players) {
@@ -377,27 +550,37 @@ system.runInterval(() => {
     const dz = owner.location.z - player.location.z;
     const distanceSquared = (dx * dx) + (dy * dy) + (dz * dz);
 
-    if (distanceSquared > TELEPORT_DISTANCE_SQUARED) {
-      try {
-        player.teleport(owner.location, { dimension: owner.dimension, keepVelocity: false });
-      } catch {
-        try {
-          player.runCommandAsync(`tp @s ${owner.location.x} ${owner.location.y} ${owner.location.z}`);
-        } catch {
-          // Ignore teleport fallback failures.
-        }
-      }
+    if (distanceSquared <= LEASH_PULL_DISTANCE_SQUARED) {
       continue;
     }
 
-    if (distanceSquared > NUDGE_DISTANCE_SQUARED) {
-      const horizontal = Math.sqrt(dx * dx + dz * dz) || 1;
-      const nx = dx / horizontal;
-      const nz = dz / horizontal;
+    const horizontal = Math.sqrt(dx * dx + dz * dz) || 1;
+    const nx = dx / horizontal;
+    const nz = dz / horizontal;
+    const verticalStrength = Math.max(-0.15, Math.min(0.35, dy * 0.08));
+
+    let horizontalStrength = 0.5;
+    if (distanceSquared > LEASH_STRONG_PULL_DISTANCE_SQUARED) {
+      horizontalStrength = 0.95;
+    }
+    if (distanceSquared > LEASH_HARD_PULL_DISTANCE_SQUARED) {
+      horizontalStrength = 1.3;
+    }
+
+    try {
+      player.applyKnockback(nx, nz, horizontalStrength, verticalStrength);
+    } catch {
       try {
-        player.applyKnockback(nx, nz, 0.6, Math.max(0, Math.min(0.2, dy * 0.05)));
+        player.teleport(
+          {
+            x: player.location.x + (nx * 0.65),
+            y: player.location.y + Math.max(-0.1, Math.min(0.3, dy * 0.03)),
+            z: player.location.z + (nz * 0.65)
+          },
+          { dimension: player.dimension, keepVelocity: true }
+        );
       } catch {
-        // Ignore runtimes where applyKnockback has incompatible signatures.
+        // Ignore movement fallback failures.
       }
     }
   }

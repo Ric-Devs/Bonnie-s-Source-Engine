@@ -1,6 +1,8 @@
+// SECTION: Ammo Constants
 const AMMO_ITEM_ID = "brr:gaussammo";
 const EMPTY_SOUND = "weapons.gauss.empty";
 
+// SECTION: Shared Helpers
 function isCreativePlayer(player) {
     if (!player?.id) return false;
 
@@ -40,6 +42,7 @@ function findAmmoInInventory(player) {
     return null;
 }
 
+// SECTION: Public Ammo API
 export function getAmmoRemaining(player) {
     if (isCreativePlayer(player)) return Number.MAX_SAFE_INTEGER;
 
@@ -69,6 +72,7 @@ export function consumeAmmo(player, cost) {
     return true;
 }
 
+// SECTION: Feedback
 export function playEmptySound(player) {
     if (!player?.id) return;
     try {

@@ -2,6 +2,7 @@ import { world } from "@minecraft/server";
 import { evaluateCondition } from "./condition_executer.js";
 import { fireOutputsForEvent, fireNamedOutput } from "../tool_ui/tool_trigger.js";
 
+// SECTION: Runtime State
 // Runtime state maps (not persisted, in-memory only)
 const autoStates = new Map();
 const branchStates = new Map();
@@ -14,6 +15,7 @@ const timerStates = new Map();
 let worldLoadProcessed = false;
 let tickCounter = 0;
 
+// SECTION: Shared Helpers
 function blockKey(block) {
 	return `${block.x}_${block.y}_${block.z}_${block.dimension}`;
 }
@@ -43,6 +45,186 @@ function getDimensionPlayers(block, allPlayers) {
 	});
 }
 
+function normalizeLiteralSelector(rawSelector) {
+	const raw = `${rawSelector ?? ""}`.trim();
+	const quoted = raw.match(/^(["'])(.*)\1$/);
+	return `${quoted ? quoted[2] : raw}`.trim().toLowerCase();
+}
+
+function parseSelectorFilters(selector) {
+	const trimmed = `${selector ?? ""}`.trim();
+	const match = trimmed.match(/^@[pares](?:\[(.*)\])?$/i);
+	if (!match) return null;
+
+	const entriesRaw = `${match[1] ?? ""}`.trim();
+	if (!entriesRaw) return {};
+
+	const filters = {};
+	for (const entry of entriesRaw.split(",")) {
+		const [rawKey, ...rawValueParts] = entry.split("=");
+		const key = `${rawKey ?? ""}`.trim().toLowerCase();
+		const value = rawValueParts.join("=").trim();
+		if (!key || !value) continue;
+		if (!Array.isArray(filters[key])) filters[key] = [];
+		filters[key].push(value);
+	}
+
+	return filters;
+}
+
+function getSelectorFilterValues(filters, key) {
+	const raw = filters?.[key];
+	if (Array.isArray(raw)) return raw.filter(value => `${value ?? ""}`.trim().length > 0);
+	if (typeof raw === "string" && raw.trim().length > 0) return [raw.trim()];
+	return [];
+}
+
+function getPlayerGameModeQuick(player) {
+	if (!player) return "";
+
+	if (typeof player.getGameMode === "function") {
+		try {
+			return `${player.getGameMode()}`.trim().toLowerCase();
+		} catch { }
+	}
+
+	return "";
+}
+
+function applyPlayerSelectorFilters(players, filters) {
+	if (!filters || !players?.length) return players ?? [];
+
+	let results = players;
+
+	const typeFilters = getSelectorFilterValues(filters, "type");
+	for (const rawType of typeFilters) {
+		const trimmed = rawType.trim().toLowerCase();
+		if (!trimmed) continue;
+
+		const isNegated = trimmed.startsWith("!");
+		const expectedType = isNegated ? trimmed.slice(1) : trimmed;
+		if (!expectedType) continue;
+
+		results = results.filter(player => {
+			const actualType = `${player?.typeId ?? "minecraft:player"}`.trim().toLowerCase();
+			const matches = actualType === expectedType;
+			return isNegated ? !matches : matches;
+		});
+	}
+
+	const nameFilters = getSelectorFilterValues(filters, "name");
+	for (const rawName of nameFilters) {
+		const trimmed = rawName.trim().toLowerCase();
+		if (!trimmed) continue;
+
+		const isNegated = trimmed.startsWith("!");
+		const expectedName = isNegated ? trimmed.slice(1) : trimmed;
+		if (!expectedName) continue;
+
+		results = results.filter(player => {
+			const tag = normalizeLiteralSelector(player?.nameTag);
+			const playerName = normalizeLiteralSelector(player?.name);
+			const matches = tag === expectedName || playerName === expectedName;
+			return isNegated ? !matches : matches;
+		});
+	}
+
+	const tagFilters = getSelectorFilterValues(filters, "tag");
+	for (const rawTag of tagFilters) {
+		const trimmed = rawTag.trim();
+		if (!trimmed) continue;
+
+		const isNegated = trimmed.startsWith("!");
+		const tagName = isNegated ? trimmed.slice(1) : trimmed;
+		if (!tagName) continue;
+
+		results = results.filter(player => {
+			let hasTag = false;
+			try {
+				hasTag = player.hasTag(tagName);
+			} catch { }
+
+			return isNegated ? !hasTag : hasTag;
+		});
+	}
+
+	const gamemodeFilters = [
+		...getSelectorFilterValues(filters, "gamemode"),
+		...getSelectorFilterValues(filters, "m")
+	];
+
+	for (const rawGamemode of gamemodeFilters) {
+		const trimmed = rawGamemode.trim().toLowerCase();
+		if (!trimmed) continue;
+
+		const isNegated = trimmed.startsWith("!");
+		const expectedGamemode = isNegated ? trimmed.slice(1) : trimmed;
+		if (!expectedGamemode) continue;
+
+		results = results.filter(player => {
+			const actualGamemode = getPlayerGameModeQuick(player);
+			if (!actualGamemode) return false;
+
+			const matches = actualGamemode === expectedGamemode;
+			return isNegated ? !matches : matches;
+		});
+	}
+
+	return results;
+}
+
+function resolvePlayersByCoopSelector(block, selectorRaw, allPlayers) {
+	const selector = `${selectorRaw ?? ""}`.trim();
+	if (!selector) return [];
+
+	const normalized = selector.toLowerCase();
+	let players = getDimensionPlayers(block, allPlayers);
+
+	if (normalized.startsWith("@")) {
+		const base = normalized.slice(0, 2);
+		const filters = parseSelectorFilters(selector);
+		players = applyPlayerSelectorFilters(players, filters);
+
+		if (base === "@a" || base === "@e") return players;
+
+		if (base === "@p") {
+			if (players.length === 0) return [];
+			const centerX = block.x + 0.5;
+			const centerY = block.y + 0.5;
+			const centerZ = block.z + 0.5;
+
+			players.sort((a, b) => {
+				const adx = a.location.x - centerX;
+				const ady = a.location.y - centerY;
+				const adz = a.location.z - centerZ;
+				const bdx = b.location.x - centerX;
+				const bdy = b.location.y - centerY;
+				const bdz = b.location.z - centerZ;
+				return (adx * adx + ady * ady + adz * adz) - (bdx * bdx + bdy * bdy + bdz * bdz);
+			});
+
+			return [players[0]];
+		}
+
+		if (base === "@r") {
+			if (players.length === 0) return [];
+			const randomIndex = Math.floor(Math.random() * players.length);
+			return [players[randomIndex]];
+		}
+
+		return [];
+	}
+
+	const literal = normalizeLiteralSelector(selector);
+	if (literal === "minecraft:player") return players;
+
+	return players.filter(player => {
+		const playerName = normalizeLiteralSelector(player?.name);
+		const playerTag = normalizeLiteralSelector(player?.nameTag);
+		return playerName === literal || playerTag === literal;
+	});
+}
+
 function evaluateConditionForBlock(conditionData, block, allPlayers) {
 	const condition = conditionData.executeCondition || "noCondition";
 	if (condition === "noCondition") return true;
@@ -60,7 +242,7 @@ function evaluateConditionForBlock(conditionData, block, allPlayers) {
 	return evaluateCondition(conditionData, dimPlayers[0], world);
 }
 
-// ── logic_auto ──
+// SECTION: logic_auto
 function tickLogicAuto(block, outputOptions) {
 	const key = blockKey(block);
 	const automations = Array.isArray(block.data.automations) ? block.data.automations : [];
@@ -103,7 +285,7 @@ function tickLogicAuto(block, outputOptions) {
 	}
 }
 
-// ── logic_branch ──
+// SECTION: logic_branch
 function tickLogicBranch(block, allPlayers, outputOptions) {
 	const key = blockKey(block);
 
@@ -151,7 +333,7 @@ function tickLogicBranch(block, allPlayers, outputOptions) {
 	}
 }
 
-// ── logic_case ──
+// SECTION: logic_case
 function tickLogicCase(block, allPlayers, outputOptions) {
 	const key = blockKey(block);
 	const cases = Array.isArray(block.data.cases) ? block.data.cases : [];
@@ -191,20 +373,20 @@ function tickLogicCase(block, allPlayers, outputOptions) {
 	}
 }
 
-// ── logic_compare ──
+// SECTION: logic_compare
 function tickLogicCompare(block, outputOptions) {
 	const key = blockKey(block);
 	const comparisons = Array.isArray(block.data.comparisons) ? block.data.comparisons : [];
 	if (comparisons.length === 0) return;
 
 	if (!compareStates.has(key)) {
-		compareStates.set(key, { lastResults: comparisons.map(() => null) });
+// SECTION: logic_coop_manager
 	}
 	const state = compareStates.get(key);
 	while (state.lastResults.length < comparisons.length) state.lastResults.push(null);
 
 	for (let i = 0; i < comparisons.length; i++) {
-		const comp = comparisons[i];
+// SECTION: logic_random_outputs
 		const objective = comp.objective || "";
 		const entity = comp.entity || "";
 		const initialValue = parseInt(comp.initialValue) || 0;
@@ -260,8 +442,15 @@ function tickLogicCoopManager(block, allPlayers, outputOptions, saveBlock) {
 		saveBlock(block);
 	}
 
-	const stateA = toBool(block.data.playerAState);
-	const stateB = toBool(block.data.playerBState);
+	const selectorA = `${block.data.playerASelector ?? ""}`.trim();
+	const selectorB = `${block.data.playerBSelector ?? ""}`.trim();
+
+	const stateA = selectorA
+		? resolvePlayersByCoopSelector(block, selectorA, allPlayers).length > 0
+		: toBool(block.data.playerAState);
+	const stateB = selectorB
+		? resolvePlayersByCoopSelector(block, selectorB, allPlayers).length > 0
+		: toBool(block.data.playerBState);
 
 	if (!coopStates.has(key)) {
 		coopStates.set(key, { lastA: null, lastB: null });
@@ -351,12 +540,13 @@ function tickLogicRandomOutputs(block, outputOptions, saveBlock) {
 	fireOutputsForEvent(block, `onRandom${randomValue}`, outputOptions);
 }
 
-// ── logic_timer ──
+// SECTION: logic_timer
 function tickLogicTimer(block, outputOptions) {
 	const key = blockKey(block);
 	const timerDelay = Math.max(1, parseInt(block.data.timer) || 20);
 
 	if (!timerStates.has(key)) {
+// SECTION: Public Tick Entry
 		timerStates.set(key, { lastFireTick: tickCounter });
 	}
 	const state = timerStates.get(key);

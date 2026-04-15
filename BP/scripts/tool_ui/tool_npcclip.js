@@ -2,6 +2,12 @@ import { ModalFormData } from "@minecraft/server-ui";
 import { world } from "@minecraft/server";
 import { addDecorativeSection, addReadOnlyListSection } from "./ui_formatting.js";
 
+function normalizeLiteralSelector(value) {
+    const raw = `${value ?? ""}`.trim();
+    const quoted = raw.match(/^(["'])(.*)\1$/);
+    return `${quoted ? quoted[2] : raw}`.trim().toLowerCase();
+}
+
 // SECTION: Npcclip Runtime Helpers
 export function selectorTargetsEntity(selectorRaw, entity, block, options) {
     const selector = `${selectorRaw ?? ""}`.trim();
@@ -11,9 +17,9 @@ export function selectorTargetsEntity(selectorRaw, entity, block, options) {
     const { parseSelectorFilters, applyEntityFilters } = options ?? {};
 
     if (!normalized.startsWith("@")) {
-        const expected = normalized;
-        const entityType = `${entity.typeId ?? ""}`.trim().toLowerCase();
-        const entityName = `${entity.nameTag ?? ""}`.trim().toLowerCase();
+        const expected = normalizeLiteralSelector(selector);
+        const entityType = normalizeLiteralSelector(entity?.typeId);
+        const entityName = normalizeLiteralSelector(entity?.nameTag);
         return expected === entityType || expected === entityName;
     }
 

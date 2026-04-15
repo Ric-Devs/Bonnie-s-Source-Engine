@@ -1,3 +1,4 @@
+// SECTION: Vector Math Helpers
 function lengthOf(v) {
     return Math.sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z));
 }
@@ -35,6 +36,7 @@ function makeBasis(direction) {
     return { forward, right, up };
 }
 
+// SECTION: Path and Offset Helpers
 function wobbleOffsets(distance, time, strandPhase, ampNear, ampFar, spiralTightness, spiralTimeScale) {
     const distanceT = Math.min(1, Math.max(0, distance / 28));
     const baseRadius = ampNear + ((ampFar - ampNear) * distanceT);
@@ -82,6 +84,7 @@ function centerlineOffsets(
     };
 }
 
+// SECTION: Particle Spawn Helpers
 function trySpawnWithFallback(dimension, preferredParticle, fallbackParticle, point) {
     const preferred = `${preferredParticle ?? ""}`.trim();
     if (preferred) {
@@ -102,6 +105,7 @@ function trySpawnWithFallback(dimension, preferredParticle, fallbackParticle, po
     return { ok: false, particle: preferred || fallback || "" };
 }
 
+// SECTION: Beam Visual Renderer
 export function renderGluonBeamVisual(config) {
     const {
         dimension,

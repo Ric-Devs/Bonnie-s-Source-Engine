@@ -3,6 +3,12 @@ import { world } from "@minecraft/server";
 import { outputClassInfoTargets, outputTypes, getOutputTargetLabel, isOutputTargetSupportedByBlockType } from "./output_ci_targets.js";
 import { addDecorativeSection, addReadOnlyListSection } from "./ui_formatting.js";
 
+function normalizeLiteralSelector(value) {
+    const raw = `${value ?? ""}`.trim();
+    const quoted = raw.match(/^("|')(.*)\1$/);
+    return `${quoted ? quoted[2] : raw}`.trim().toLowerCase();
+}
+
 // SECTION: Playerspawn Runtime Helpers
 export function parseSpawnCoordinates(raw) {
     const coords = `${raw ?? ""}`.trim().split(/\s+/);
@@ -84,6 +90,51 @@ export function getPlayerspawnSpawnConfig(activeBlock, parseBooleanLikeFn) {
         setsPlayerSpawnPoint,
         spawnDim: world.getDimension(activeBlock.dimension)
     };
+}
+
+export function getPlayerspawnTargets(block, selectorRaw, options) {
+    const selector = `${selectorRaw ?? "@a"}`.trim() || "@a";
+    const normalized = selector.toLowerCase();
+    const allPlayers = Array.from(world.getPlayers());
+
+    const { parseSelectorFilters, applyEntityFilters } = options ?? {};
+
+    if (normalized.startsWith("@")) {
+        const filters = typeof parseSelectorFilters === "function" ? parseSelectorFilters(selector) : null;
+        const base = normalized.slice(0, 2);
+
+        if (base === "@a" || base === "@p" || base === "@r" || base === "@e") {
+            let players = allPlayers;
+            players = typeof applyEntityFilters === "function" ? applyEntityFilters(players, filters) : players;
+
+            if (base === "@p") {
+                return players.length > 0 ? [players[0]] : [];
+            }
+
+            if (base === "@r") {
+                if (players.length === 0) return [];
+                const randomIndex = Math.floor(Math.random() * players.length);
+                return [players[randomIndex]];
+            }
+
+            return players;
+        }
+
+        return [];
+    }
+
+    const literal = normalizeLiteralSelector(selector);
+    const players = allPlayers;
+
+    if (literal === "minecraft:player") {
+        return players;
+    }
+
+    return players.filter(player => {
+        const playerName = normalizeLiteralSelector(player?.name);
+        const playerTag = normalizeLiteralSelector(player?.nameTag);
+        return playerName === literal || playerTag === literal;
+    });
 }
 
 // SECTION: Playerspawn UI Data Helpers
@@ -172,6 +223,7 @@ export function infoPlayerspawnUI(player, blockEntry, onSave) {
     playerspawnForm.toggle("World spawn at block", { defaultValue: blockEntry.data?.worldSpawnAtBlock !== false });
     playerspawnForm.textField("World spawn coordinates", "Pos: XYZ (e.g., 0 64 0)", { defaultValue: blockEntry.data?.worldSpawn || "" });
     playerspawnForm.toggle("Set Player Spawn Point", { defaultValue: Boolean(blockEntry.data?.setsPlayerSpawnPoint) });
+    playerspawnForm.textField("Selectors (used only when Set Player Spawn Point is on)", "@a", { defaultValue: blockEntry.data?.selectors || "@a" });
 
     addDecorativeSection(playerspawnForm, "Outputs");
     playerspawnForm.toggle("Add this output", { defaultValue: false });
@@ -212,7 +264,7 @@ export function infoPlayerspawnUI(player, blockEntry, onSave) {
         if (response.canceled) return;
 
         const formData = (response.formValues ?? []).filter(value => value !== undefined && value !== null);
-        if (formData.length < 12) {
+        if (formData.length < 13) {
             player.sendMessage("§cSave failed: form data is incomplete.");
             return;
         }
@@ -223,6 +275,7 @@ export function infoPlayerspawnUI(player, blockEntry, onSave) {
         const worldSpawnAtBlock = Boolean(formData[cursor++]);
         const worldSpawn = `${formData[cursor++] ?? ""}`;
         const setsPlayerSpawnPoint = Boolean(formData[cursor++]);
+        const selectors = `${formData[cursor++] ?? "@a"}`.trim() || "@a";
 
         const addOutput = Boolean(formData[cursor++]);
         const outputNameRaw = `${formData[cursor++] ?? ""}`.trim();
@@ -284,6 +337,7 @@ export function infoPlayerspawnUI(player, blockEntry, onSave) {
         blockEntry.data.worldSpawnAtBlock = worldSpawnAtBlock;
         blockEntry.data.worldSpawn = worldSpawn;
         blockEntry.data.setsPlayerSpawnPoint = setsPlayerSpawnPoint;
+        blockEntry.data.selectors = selectors;
         blockEntry.data.outputs = nextOutputs;
 
         // Call the save callback

@@ -1,9 +1,13 @@
 import * as mc from "@minecraft/server";
 import { ModalFormData, ActionFormData } from "@minecraft/server-ui";
 
+// SECTION: Runtime Handles and Permissions
 const { world, system } = mc;
 const CommandPermissionLevel = mc.CommandPermissionLevel;
+const CustomCommandParamType = mc.CustomCommandParamType;
+const PlayerPermissionLevel = mc.PlayerPermissionLevel;
 
+// SECTION: Emoji Catalog
 const emojis = [
     { id: ":skull:", emoji: "", displayName: "Skull" },
     { id: ":pray:", emoji: "", displayName: "Pray" },
@@ -224,6 +228,451 @@ const emojis = [
     { id: ":rabbit6:", emoji: "", displayName: "Rabbit 6" }
 ]
 
+const DEV_NAMETAG_PLAYERS = new Set([
+    "bonnierobloxrip",
+    "marshmallow997",
+    "xxjustmaxxx7546"
+]);
+
+const DEV_NAMETAG_TAGS = new Set([
+    "dev",
+    "developer"
+]);
+
+const CHAT_MESSAGE_COOLDOWN_DEFAULT_MS = 1000;
+const CHAT_MESSAGE_COOLDOWN_PROPERTY = "brr_chat_message_cooldown_ms";
+let chatMessageCooldownMs = CHAT_MESSAGE_COOLDOWN_DEFAULT_MS;
+const lastChatMessageAtByPlayer = new Map();
+const MUTE_STATE_PROPERTY = "brr_mute_state";
+const muteEntriesByPlayerId = new Map();
+const BOOK_ITEM_IDS = new Set([
+    "minecraft:writable_book",
+    "minecraft:written_book",
+    "minecraft:book_and_quill"
+]);
+const MUTED_NOTICE_COOLDOWN_MS = 1200;
+const lastMutedNoticeAtByPlayer = new Map();
+
+// SECTION: Moderation Helpers
+function normalizeTextToken(raw) {
+    const text = `${raw ?? ""}`.trim();
+    const quoted = text.match(/^("|')(.*)\1$/);
+    return `${quoted ? quoted[2] : text}`.trim();
+}
+
+function normalizePlayerName(raw) {
+    return normalizeTextToken(raw).toLowerCase();
+}
+
+function formatDurationSeconds(totalSecondsRaw) {
+    const totalSeconds = Number(totalSecondsRaw);
+    if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) return "0s";
+
+    if (totalSeconds < 60) {
+        return `${totalSeconds.toFixed(1).replace(/\.0+$/, "").replace(/(\.\d*?)0+$/, "$1")}s`;
+    }
+
+    const rounded = Math.ceil(totalSeconds);
+    const hours = Math.floor(rounded / 3600);
+    const minutes = Math.floor((rounded % 3600) / 60);
+    const seconds = rounded % 60;
+    const parts = [];
+
+    if (hours > 0) parts.push(`${hours}h`);
+    if (minutes > 0) parts.push(`${minutes}m`);
+    if (seconds > 0 || parts.length === 0) parts.push(`${seconds}s`);
+
+    return parts.join(" ");
+}
+
+function persistMuteState() {
+    try {
+        const serialized = JSON.stringify(Array.from(muteEntriesByPlayerId.values()));
+        world.setDynamicProperty(MUTE_STATE_PROPERTY, serialized);
+    } catch {
+        // Keep runtime mute state even if persistence fails.
+    }
+}
+
+function loadMuteState() {
+    muteEntriesByPlayerId.clear();
+
+    try {
+        const raw = world.getDynamicProperty(MUTE_STATE_PROPERTY);
+        if (typeof raw !== "string" || raw.trim().length === 0) {
+            return;
+        }
+
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) {
+            return;
+        }
+
+        const now = Date.now();
+        let hadExpired = false;
+
+        for (const item of parsed) {
+            const playerId = `${item?.playerId ?? ""}`.trim();
+            const playerName = `${item?.playerName ?? ""}`.trim();
+            const mutedBy = `${item?.mutedBy ?? ""}`.trim();
+            const reason = `${item?.reason ?? ""}`.trim();
+            const createdAt = Number(item?.createdAt ?? 0);
+            const expiresAt = Number(item?.expiresAt ?? 0);
+
+            if (!playerId || !Number.isFinite(expiresAt) || expiresAt <= now) {
+                hadExpired = true;
+                continue;
+            }
+
+            muteEntriesByPlayerId.set(playerId, {
+                playerId,
+                playerName,
+                mutedBy,
+                reason,
+                createdAt: Number.isFinite(createdAt) ? createdAt : now,
+                expiresAt
+            });
+        }
+
+        if (hadExpired) {
+            persistMuteState();
+        }
+    } catch {
+        // Ignore malformed persisted mute state.
+    }
+}
+
+function cleanupExpiredMutes() {
+    const now = Date.now();
+    let changed = false;
+
+    for (const [playerId, entry] of muteEntriesByPlayerId.entries()) {
+        if (Number(entry?.expiresAt ?? 0) <= now) {
+            muteEntriesByPlayerId.delete(playerId);
+            changed = true;
+        }
+    }
+
+    if (changed) {
+        persistMuteState();
+    }
+}
+
+function getActiveMuteEntry(player) {
+    const playerId = `${player?.id ?? ""}`.trim();
+    if (!playerId) return null;
+
+    const entry = muteEntriesByPlayerId.get(playerId);
+    if (!entry) return null;
+
+    if (Number(entry.expiresAt ?? 0) <= Date.now()) {
+        muteEntriesByPlayerId.delete(playerId);
+        persistMuteState();
+        return null;
+    }
+
+    const currentName = `${player?.name ?? ""}`.trim();
+    if (currentName && entry.playerName !== currentName) {
+        entry.playerName = currentName;
+        muteEntriesByPlayerId.set(playerId, entry);
+        persistMuteState();
+    }
+
+    return entry;
+}
+
+function parseMuteDurationSeconds(rawDuration) {
+    const durationSeconds = typeof rawDuration === "number"
+        ? rawDuration
+        : Number.parseFloat(`${rawDuration ?? ""}`.trim());
+
+    if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) {
+        return undefined;
+    }
+
+    return durationSeconds;
+}
+
+function findOnlinePlayerByName(rawPlayerName) {
+    const normalizedTarget = normalizePlayerName(rawPlayerName);
+    if (!normalizedTarget) return undefined;
+
+    return world.getPlayers().find(player => normalizePlayerName(player?.name) === normalizedTarget);
+}
+
+function getPlayerFromCommandInput(targetInput) {
+    if (Array.isArray(targetInput)) {
+        for (const value of targetInput) {
+            const resolved = getPlayerFromCommandInput(value);
+            if (resolved) return resolved;
+        }
+        return undefined;
+    }
+
+    if (targetInput && typeof targetInput === "object") {
+        if (`${targetInput?.typeId ?? ""}` === "minecraft:player") {
+            return targetInput;
+        }
+        return undefined;
+    }
+
+    return findOnlinePlayerByName(targetInput);
+}
+
+function setPlayerMute(targetPlayer, durationSeconds, mutedByName, reasonText) {
+    const now = Date.now();
+    const entry = {
+        playerId: `${targetPlayer?.id ?? ""}`.trim(),
+        playerName: `${targetPlayer?.name ?? ""}`.trim(),
+        mutedBy: `${mutedByName ?? ""}`.trim(),
+        reason: `${reasonText ?? ""}`.trim(),
+        createdAt: now,
+        expiresAt: now + Math.max(1, Math.round(durationSeconds * 1000))
+    };
+
+    if (!entry.playerId) return null;
+
+    muteEntriesByPlayerId.set(entry.playerId, entry);
+    persistMuteState();
+    return entry;
+}
+
+function removeMuteByPlayerId(playerId) {
+    const normalizedId = `${playerId ?? ""}`.trim();
+    if (!normalizedId) return null;
+
+    const existing = muteEntriesByPlayerId.get(normalizedId) ?? null;
+    if (!existing) return null;
+
+    muteEntriesByPlayerId.delete(normalizedId);
+    persistMuteState();
+    return existing;
+}
+
+function removeMuteByPlayerName(rawPlayerName) {
+    const normalizedTarget = normalizePlayerName(rawPlayerName);
+    if (!normalizedTarget) return null;
+
+    for (const [playerId, entry] of muteEntriesByPlayerId.entries()) {
+        if (normalizePlayerName(entry?.playerName) !== normalizedTarget) continue;
+
+        muteEntriesByPlayerId.delete(playerId);
+        persistMuteState();
+        return entry;
+    }
+
+    return null;
+}
+
+function canRunModerationCommands(player) {
+    if (!player) return false;
+    if (!PlayerPermissionLevel) return true;
+
+    return player.playerPermissionLevel === PlayerPermissionLevel.Operator;
+}
+
+function executeMuteCommand(actor, targetInput, durationRaw, reasonRaw) {
+    const durationSeconds = parseMuteDurationSeconds(durationRaw);
+    const reason = normalizeTextToken(reasonRaw);
+    const targetPlayer = getPlayerFromCommandInput(targetInput);
+
+    if (!targetInput) {
+        actor.sendMessage("§cUsage: /mute <player> <duration> [reason]");
+        return;
+    }
+
+    if (durationSeconds === undefined) {
+        actor.sendMessage("§cInvalid duration. Use a number of seconds greater than 0.");
+        return;
+    }
+
+    if (!targetPlayer) {
+        actor.sendMessage("§cTarget player not found online.");
+        return;
+    }
+
+    const muteEntry = setPlayerMute(targetPlayer, durationSeconds, actor.name, reason);
+    if (!muteEntry) {
+        actor.sendMessage("§cFailed to apply mute.");
+        return;
+    }
+
+    const durationLabel = formatDurationSeconds(durationSeconds);
+    const reasonSuffix = reason ? ` Reason: ${reason}` : "";
+
+    actor.sendMessage(`§aMuted ${targetPlayer.name} for ${durationLabel}.${reasonSuffix}`);
+    targetPlayer.sendMessage(`§cYou have been muted for ${durationLabel}.${reasonSuffix}`);
+}
+
+function executeUnmuteCommand(actor, targetInput, reasonRaw) {
+    const reason = normalizeTextToken(reasonRaw);
+    const targetPlayer = getPlayerFromCommandInput(targetInput);
+    const targetName = targetPlayer ? `${targetPlayer.name ?? ""}`.trim() : normalizeTextToken(targetInput);
+
+    if (!targetName) {
+        actor.sendMessage("§cUsage: /unmute <player> [reason]");
+        return;
+    }
+
+    const removedEntry = targetPlayer
+        ? removeMuteByPlayerId(targetPlayer.id)
+        : removeMuteByPlayerName(targetName);
+
+    if (!removedEntry) {
+        actor.sendMessage(`§e${targetName} is not muted.`);
+        return;
+    }
+
+    const reasonSuffix = reason ? ` Reason: ${reason}` : "";
+    const targetNameForDisplay = `${removedEntry.playerName ?? targetName}`.trim() || targetName;
+
+    actor.sendMessage(`§aUnmuted ${targetNameForDisplay}.${reasonSuffix}`);
+
+    const onlineTarget = world.getPlayers().find(player => `${player?.id ?? ""}` === `${removedEntry.playerId ?? ""}`);
+    if (onlineTarget) {
+        onlineTarget.sendMessage(`§aYou have been unmuted.${reasonSuffix}`);
+    }
+}
+
+function getMuteBlockedMessage(entry) {
+    const remainingSeconds = Math.max(0, (Number(entry?.expiresAt ?? 0) - Date.now()) / 1000);
+    const remainingLabel = formatDurationSeconds(remainingSeconds);
+    const reason = `${entry?.reason ?? ""}`.trim();
+
+    if (reason) {
+        return `§cYou are muted for ${remainingLabel}. Reason: ${reason}`;
+    }
+
+    return `§cYou are muted for ${remainingLabel}.`;
+}
+
+function sendMutedNotice(player, entry) {
+    const key = `${player?.id ?? player?.name ?? ""}`;
+    const now = Date.now();
+    const lastSentAt = lastMutedNoticeAtByPlayer.get(key) ?? 0;
+
+    if (now - lastSentAt < MUTED_NOTICE_COOLDOWN_MS) return;
+
+    lastMutedNoticeAtByPlayer.set(key, now);
+    player?.sendMessage?.(getMuteBlockedMessage(entry));
+}
+
+function isSignTypeId(typeId) {
+    const normalized = `${typeId ?? ""}`.trim().toLowerCase();
+    if (!normalized) return false;
+
+    return normalized.endsWith("_sign") || normalized.endsWith(":sign") || normalized.endsWith("_wall_sign");
+}
+
+function isMutedRestrictedItem(typeId) {
+    const normalized = `${typeId ?? ""}`.trim().toLowerCase();
+    if (!normalized) return false;
+
+    return BOOK_ITEM_IDS.has(normalized) || isSignTypeId(normalized);
+}
+
+function normalizeChatCooldownSeconds(rawSeconds) {
+    const parsedSeconds = typeof rawSeconds === "number"
+        ? rawSeconds
+        : Number.parseFloat(`${rawSeconds ?? ""}`.trim());
+
+    if (!Number.isFinite(parsedSeconds) || parsedSeconds < 0) {
+        return undefined;
+    }
+
+    return parsedSeconds;
+}
+
+function applyChatCooldownMs(cooldownMs, persist = true) {
+    const safeMs = Math.max(0, Math.round(cooldownMs));
+    chatMessageCooldownMs = safeMs;
+
+    if (safeMs === 0) {
+        lastChatMessageAtByPlayer.clear();
+    }
+
+    if (!persist) return;
+
+    try {
+        world.setDynamicProperty(CHAT_MESSAGE_COOLDOWN_PROPERTY, safeMs);
+    } catch {
+        // Dynamic property can fail if called too early; runtime value still applies.
+    }
+}
+
+function loadPersistedChatCooldown() {
+    try {
+        const storedValue = world.getDynamicProperty(CHAT_MESSAGE_COOLDOWN_PROPERTY);
+        if (typeof storedValue === "number" && Number.isFinite(storedValue) && storedValue >= 0) {
+            applyChatCooldownMs(storedValue, false);
+            return;
+        }
+    } catch {
+        // Keep default cooldown if dynamic properties are unavailable.
+    }
+
+    applyChatCooldownMs(CHAT_MESSAGE_COOLDOWN_DEFAULT_MS, false);
+}
+
+// SECTION: Chat Cooldown Controls
+export function getChatCooldownSeconds() {
+    return chatMessageCooldownMs / 1000;
+}
+
+export function setChatCooldownSeconds(rawSeconds) {
+    const parsedSeconds = normalizeChatCooldownSeconds(rawSeconds);
+    if (parsedSeconds === undefined) {
+        return undefined;
+    }
+
+    applyChatCooldownMs(parsedSeconds * 1000, true);
+    return getChatCooldownSeconds();
+}
+
+system.run(() => {
+    loadPersistedChatCooldown();
+    loadMuteState();
+});
+
+system.runInterval(() => {
+    cleanupExpiredMutes();
+}, 20);
+
+function isDevNametagPlayer(playerOrName) {
+    const name = typeof playerOrName === "string" ? playerOrName : playerOrName?.name;
+    const normalizedName = `${name ?? ""}`.trim().toLowerCase();
+    if (DEV_NAMETAG_PLAYERS.has(normalizedName)) return true;
+
+    if (typeof playerOrName === "object" && playerOrName) {
+        try {
+            const tags = playerOrName.getTags();
+            return tags.some((tag) => DEV_NAMETAG_TAGS.has(`${tag ?? ""}`.trim().toLowerCase()));
+        } catch {
+            return false;
+        }
+    }
+
+    return false;
+}
+
+function sendWhisperMirrorToDevs(sender, targetName, processedMessage) {
+    const senderTags = sender.getTags();
+    const rankPrefix = chatRank(sender, senderTags);
+    const mirrorText = `§8[Dev Whisper] §r${rankPrefix}§r${sender.name} §7-> §r${targetName}: §f${processedMessage}`;
+
+    for (const onlinePlayer of world.getPlayers()) {
+        if (!isDevNametagPlayer(onlinePlayer)) continue;
+        if (onlinePlayer.id === sender.id) continue;
+        if (onlinePlayer.name === targetName) continue;
+
+        try {
+            onlinePlayer.sendMessage(mirrorText);
+        } catch {
+            // Skip recipients that cannot be messaged this tick.
+        }
+    }
+}
+
 function getCustomNametagParts(player, context) {
     try {
         const raw = player.getDynamicProperty("brr_nametag");
@@ -274,6 +723,7 @@ function normalizeChatMessage(rawMessage) {
         .replaceAll("%", "%%");
 }
 
+// SECTION: Chat Formatting Helpers
 export function applyEmojiReplacements(message) {
     let processedMessage = message;
     for (const emoji of emojis) {
@@ -283,6 +733,12 @@ export function applyEmojiReplacements(message) {
 }
 
 export function sendRankedMessage(player, rawMessage) {
+    const muteEntry = getActiveMuteEntry(player);
+    if (muteEntry) {
+        sendMutedNotice(player, muteEntry);
+        return;
+    }
+
     const tags = player.getTags();
     const rankPrefix = chatRank(player, tags);
     const nametagParts = getCustomNametagParts(player, "chat");
@@ -297,7 +753,7 @@ export function chatRank(player, tags) {
     let rankPrefix = "";
 
     // Dev Ranks
-    if (["BonnieRobloxRIP", "Marshmallow997", "xXJustMaxXx7546"].includes(player.name)) {
+    if (isDevNametagPlayer(player)) {
         rankPrefix += "[§l§dDev§r] ";
     }
     if (["DinoDaniel21"].includes(player.name)) {
@@ -331,7 +787,7 @@ export function nametagRank(player, tags) {
 
     if (player.name === "BonnieRobloxRIP") rankPrefix += " ";
 
-    if (["BonnieRobloxRIP", "Marshmallow997", "xXJustMaxXx7546"].includes(player.name)) {
+    if (isDevNametagPlayer(player)) {
         rankPrefix += "[§l§dDev§r] ";
     }
     if (["DinoDaniel21"].includes(player.name)) {
@@ -361,6 +817,7 @@ export function nametagRank(player, tags) {
     return rankPrefix;
 }
 
+// SECTION: Message Handling
 export function handleMessage() {
     try {
         world.beforeEvents.chatSend.subscribe((data) => {
@@ -369,11 +826,82 @@ export function handleMessage() {
             let message = data.message;
             const nametagParts = getCustomNametagParts(player, "chat");
 
-            if (message.toLowerCase() === "!emojis") {
+            const trimmedMessage = `${message ?? ""}`.trim();
+
+            const brrCooldownMatch = trimmedMessage.match(/^\/brr\s+adjust_chat_cooldown\s+(.+)$/i);
+            if (brrCooldownMatch) {
                 data.cancel = true;
-                player.sendMessage("§cPlease use /brr:emojis instead.");
+
+                if (!canRunModerationCommands(player)) {
+                    player.sendMessage("§cYou do not have permission to adjust chat cooldown.");
+                    return;
+                }
+
+                const rawCooldown = normalizeTextToken(brrCooldownMatch[1]);
+                const appliedSeconds = setChatCooldownSeconds(rawCooldown);
+                if (appliedSeconds === undefined) {
+                    player.sendMessage("§cInvalid value. Use a number >= 0 (examples: 0, 0.1, 1).");
+                    return;
+                }
+
+                const formattedSeconds = appliedSeconds
+                    .toFixed(3)
+                    .replace(/\.0+$/, "")
+                    .replace(/(\.\d*?)0+$/, "$1");
+
+                player.sendMessage(`§aChat cooldown set to ${formattedSeconds} second(s).`);
                 return;
             }
+
+            const muteCommandMatch = trimmedMessage.match(/^\/mute\s+(\S+)\s+(\S+)(?:\s+(.+))?$/i);
+            if (muteCommandMatch) {
+                data.cancel = true;
+
+                if (!canRunModerationCommands(player)) {
+                    player.sendMessage("§cYou do not have permission to use /mute.");
+                    return;
+                }
+
+                executeMuteCommand(player, muteCommandMatch[1], muteCommandMatch[2], muteCommandMatch[3] ?? "");
+                return;
+            }
+
+            const unmuteCommandMatch = trimmedMessage.match(/^\/unmute\s+(\S+)(?:\s+(.+))?$/i);
+            if (unmuteCommandMatch) {
+                data.cancel = true;
+
+                if (!canRunModerationCommands(player)) {
+                    player.sendMessage("§cYou do not have permission to use /unmute.");
+                    return;
+                }
+
+                executeUnmuteCommand(player, unmuteCommandMatch[1], unmuteCommandMatch[2] ?? "");
+                return;
+            }
+
+            const normalizedMessage = `${message ?? ""}`.trim().toLowerCase();
+            if (normalizedMessage === "!emojis" || normalizedMessage === "/emojis" || normalizedMessage === "/brr:emojis") {
+                data.cancel = true;
+                system.run(() => showMainMenu(player));
+                return;
+            }
+
+            const muteEntry = getActiveMuteEntry(player);
+            if (muteEntry) {
+                data.cancel = true;
+                sendMutedNotice(player, muteEntry);
+                return;
+            }
+
+            const cooldownKey = `${player?.id ?? player?.name ?? ""}`;
+            const now = Date.now();
+            const lastMessageAt = lastChatMessageAtByPlayer.get(cooldownKey) ?? 0;
+            if (chatMessageCooldownMs > 0 && now - lastMessageAt < chatMessageCooldownMs) {
+                data.cancel = true;
+                player.sendMessage("§cDon't you dare spam!");
+                return;
+            }
+            lastChatMessageAtByPlayer.set(cooldownKey, now);
 
             message = applyEmojiReplacements(normalizeChatMessage(message));
 
@@ -403,28 +931,108 @@ try {
     handleMessage();
 } catch { }
 
-// Item use
+// SECTION: Mute Restriction Event Hooks
 try {
     world.afterEvents.itemUse.subscribe((eventData) => {
         const player = eventData.source;
         const itemId = eventData.itemStack.typeId;
 
         if (itemId === "brr:dino_speecher") {
+            const muteEntry = getActiveMuteEntry(player);
+            if (muteEntry) {
+                sendMutedNotice(player, muteEntry);
+                return;
+            }
+
             showDinoSpeecherMenu(player);
             return;
         }
     });
 } catch { }
 
-// Emoji command
+try {
+    const itemUseBeforeSignal = world.beforeEvents?.itemUse;
+    if (itemUseBeforeSignal) {
+        itemUseBeforeSignal.subscribe((eventData) => {
+            const player = eventData?.source;
+            if (!player || player.typeId !== "minecraft:player") return;
+
+            const muteEntry = getActiveMuteEntry(player);
+            if (!muteEntry) return;
+
+            const itemId = `${eventData?.itemStack?.typeId ?? ""}`;
+            if (!isMutedRestrictedItem(itemId)) return;
+
+            eventData.cancel = true;
+            sendMutedNotice(player, muteEntry);
+        });
+    }
+} catch { }
+
+try {
+    const itemUseOnBeforeSignal = world.beforeEvents?.itemUseOn;
+    if (itemUseOnBeforeSignal) {
+        itemUseOnBeforeSignal.subscribe((eventData) => {
+            const player = eventData?.source;
+            if (!player || player.typeId !== "minecraft:player") return;
+
+            const muteEntry = getActiveMuteEntry(player);
+            if (!muteEntry) return;
+
+            const itemId = `${eventData?.itemStack?.typeId ?? ""}`;
+            if (!isMutedRestrictedItem(itemId)) return;
+
+            eventData.cancel = true;
+            sendMutedNotice(player, muteEntry);
+        });
+    }
+} catch { }
+
+try {
+    const playerInteractWithBlockBeforeSignal = world.beforeEvents?.playerInteractWithBlock;
+    if (playerInteractWithBlockBeforeSignal) {
+        playerInteractWithBlockBeforeSignal.subscribe((eventData) => {
+            const player = eventData?.player;
+            if (!player) return;
+
+            const muteEntry = getActiveMuteEntry(player);
+            if (!muteEntry) return;
+
+            const blockTypeId = `${eventData?.block?.typeId ?? ""}`;
+            if (!isSignTypeId(blockTypeId)) return;
+
+            eventData.cancel = true;
+            sendMutedNotice(player, muteEntry);
+        });
+    }
+} catch { }
+
+// SECTION: Command Registration
 export function emojiCommand(data) {
     if (!data?.customCommandRegistry || !CommandPermissionLevel) {
         return;
     }
 
-    data.customCommandRegistry.registerCommand(
+    const registry = data.customCommandRegistry;
+
+    function registerCommandAliases(baseConfig, callback, names) {
+        for (const name of names) {
+            try {
+                registry.registerCommand(
+                    {
+                        ...baseConfig,
+                        name
+                    },
+                    callback
+                );
+            } catch {
+                // Ignore unavailable aliases or duplicate registrations.
+            }
+        }
+    }
+
+    registerCommandAliases(
         {
-            name: "brr:emojis",
             description: "Open the emoji list menu",
             permissionLevel: CommandPermissionLevel.Any,
             mandatoryParameters: [],
@@ -434,76 +1042,82 @@ export function emojiCommand(data) {
             if (player && player.typeId === "minecraft:player") {
                 system.run(() => showMainMenu(player));
             }
-        }
+        },
+        ["brr:emojis", "emojis"]
+    );
+
+    if (!CustomCommandParamType) return;
+
+    registerCommandAliases(
+        {
+            description: "Mute a player",
+            permissionLevel: CommandPermissionLevel.GameDirectors,
+            mandatoryParameters: [
+                { name: "player", type: CustomCommandParamType.PlayerSelector ?? CustomCommandParamType.String },
+                { name: "duration_seconds", type: CustomCommandParamType.Float }
+            ],
+            optionalParameters: [
+                { name: "reason", type: CustomCommandParamType.String }
+            ]
+        },
+        (origin, targetNameRaw, durationRaw, reasonRaw) => {
+            const actor = origin?.sourceEntity;
+            if (!actor || actor.typeId !== "minecraft:player") return;
+            executeMuteCommand(actor, targetNameRaw, durationRaw, reasonRaw);
+        },
+        ["brr:mute", "mute"]
+    );
+
+    registerCommandAliases(
+        {
+            description: "Unmute a player",
+            permissionLevel: CommandPermissionLevel.GameDirectors,
+            mandatoryParameters: [
+                { name: "player", type: CustomCommandParamType.PlayerSelector ?? CustomCommandParamType.String }
+            ],
+            optionalParameters: [
+                { name: "reason", type: CustomCommandParamType.String }
+            ]
+        },
+        (origin, targetNameRaw, reasonRaw) => {
+            const actor = origin?.sourceEntity;
+            if (!actor || actor.typeId !== "minecraft:player") return;
+            executeUnmuteCommand(actor, targetNameRaw, reasonRaw);
+        },
+        ["brr:unmute", "unmute"]
     );
 }
 
-export function getCategory(emoji) {
-    const char = emoji.displayName.charAt(0).toUpperCase();
-    return /[A-Z]/.test(char) ? char : "#";
-}
 
+
+// SECTION: Menu UI
 export function showMainMenu(player) {
-    // Get unique categories and sort them (# first, then A-Z)
-    const categories = [...new Set(emojis.map(e => getCategory(e)))].sort((a, b) => {
-        if (a === "#") return -1;
-        if (b === "#") return 1;
-        return a.localeCompare(b);
-    });
-
     const form = new ActionFormData()
-        .title(" Emoji List ")
-        .body("Select a category:");
+        .title(" Emoji List ");
 
-    for (const category of categories) {
-        form.button(`${category}`);
-    }
-
-    form.show(player).then(response => {
-        if (response.canceled) return;
-
-        const selectedCategory = categories[response.selection];
-        showCategoryMenu(player, selectedCategory);
-    });
-}
-
-export function showCategoryMenu(player, category) {
-    // Filter emojis for this category
-    const categoryEmojis = emojis.filter(e => getCategory(e) === category);
-
-    // Sort emojis alphabetically by displayName
-    categoryEmojis.sort((a, b) => a.displayName.localeCompare(b.displayName));
-
-    const form = new ActionFormData()
-        .title(` ${category} `);
-
-    form.button("§l« Back to list");
-
-    for (const emoji of categoryEmojis) {
+    for (const emoji of emojis) {
         form.button(`${emoji.emoji} ${emoji.id} ${emoji.displayName}`);
     }
 
     form.show(player).then(response => {
         if (response.canceled) return;
 
-        if (response.selection === 0) {
-            showMainMenu(player);
-            return;
-        }
-
-        const selectedEmoji = categoryEmojis[response.selection - 1];
+        const selectedEmoji = emojis[response.selection];
 
         if (selectedEmoji) {
-            // Send the ranked message
             sendRankedMessage(player, selectedEmoji.emoji);
-
-            // Re-open this specific menu
-            system.run(() => showCategoryMenu(player, category));
+            system.run(() => showMainMenu(player));
         }
     });
 }
 
 export function showDinoSpeecherMenu(player) {
+    const muteEntry = getActiveMuteEntry(player);
+    if (muteEntry) {
+        sendMutedNotice(player, muteEntry);
+        return;
+    }
+
     const TARGET_PROPERTY = "brr_dino_speecher_target";
 
     // Get all players for the dropdown
@@ -539,6 +1153,12 @@ export function showDinoSpeecherMenu(player) {
         // Make sure message isn't empty
         if (messageText.trim().length === 0) return;
 
+        const latestMuteEntry = getActiveMuteEntry(player);
+        if (latestMuteEntry) {
+            sendMutedNotice(player, latestMuteEntry);
+            return;
+        }
+
         if (selectionIndex === 0) {
             // - Option 1: Public Chat (None selected)
             sendRankedMessage(player, messageText);
@@ -563,6 +1183,9 @@ export function showDinoSpeecherMenu(player) {
 
                 // Confirmation for the sender
                 player.sendMessage(`§7You whisper to ${targetName}: ${processedMessage}`);
+
+                // Mirror whispers to all online dev nametag players.
+                sendWhisperMirrorToDevs(player, targetName, processedMessage);
             } else {
                 player.sendMessage("§cTarget player not found (they may have left).");
             }

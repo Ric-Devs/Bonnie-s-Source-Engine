@@ -1,5 +1,6 @@
 import { world, system, EntityDamageCause, ItemStack } from "@minecraft/server";
 
+// SECTION: Glock Constants
 const GLOCK_ITEM_ID = "brr:glock17";
 const GLOCK_EMPTY_ITEM_ID = "brr:glock17_empty";
 const GLOCK_AMMO_ITEM_ID = "brr:9mmclip";
@@ -25,6 +26,7 @@ const IDLE_FIDGET_MIN_INTERVAL_TICKS = 200;
 const IDLE_FIDGET_MAX_INTERVAL_TICKS = 340;
 const HUD_UPDATE_INTERVAL_TICKS = 2;
 
+// SECTION: Glock Runtime State
 const autoFireStateByPlayer = new Map();
 const lastShotTickByPlayer = new Map();
 const reloadUntilTickByPlayer = new Map();
@@ -36,6 +38,7 @@ const nextIdleFidgetSoundTickByPlayer = new Map();
 const lastAmmoHudTextByPlayer = new Map();
 const lastAmmoHudTickByPlayer = new Map();
 
+// SECTION: Shared Helpers
 function getCurrentTick() {
     try {
         const tick = Number(system?.currentTick);
@@ -117,6 +120,7 @@ function playSoundForPlayer(player, soundId) {
     } catch { }
 }
 
+// SECTION: Ammo and Reload Helpers
 function getLoadedRounds(player) {
     if (!player?.id) return 0;
 
@@ -298,6 +302,7 @@ function tryReload(player) {
     return true;
 }
 
+// SECTION: Shot Geometry Helpers
 function lengthOf(vector) {
     return Math.sqrt((vector.x * vector.x) + (vector.y * vector.y) + (vector.z * vector.z));
 }
@@ -500,6 +505,7 @@ function fireGlockShot(player) {
     return true;
 }
 
+// SECTION: Input Helpers
 function beginAutoFire(player) {
     if (!player?.id || !isHoldingGlock(player)) return;
 
@@ -522,6 +528,7 @@ function stopAutoFire(player) {
     autoFireStateByPlayer.delete(player.id);
 }
 
+// SECTION: Event Wiring
 world.afterEvents.itemUse.subscribe((eventData) => {
     const player = getEventSourcePlayer(eventData);
     if (!isPlayerEntity(player)) return;
@@ -558,6 +565,7 @@ world.afterEvents.itemReleaseUse.subscribe((eventData) => {
     stopAutoFire(player);
 });
 
+// SECTION: Runtime Tick
 system.runInterval(() => {
     const tick = getCurrentTick();
     const onlinePlayerIds = new Set();

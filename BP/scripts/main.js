@@ -1,9 +1,9 @@
 import * as mc from "@minecraft/server";
-import { applyEmojiReplacements } from "./handler/chat_system.js";
+import { applyEmojiReplacements, emojiCommand, setChatCooldownSeconds } from "./handler/chat_system.js";
 import { evaluateCondition, validateConditionRequirements } from "./handler/condition_executer.js";
 import { conditionTools } from "./tool_ui/conditions_tools.js";
 import { areaPortalToolUI, handleAreaPortalBlock } from "./tool_ui/tool_areaportal.js";
-import { infoPlayerspawnUI, getPlayerspawnSpawnConfig, getActivePlayerspawnBlocks, applySpawnPointForPlayer, applyWorldSpawnPoint } from "./tool_ui/info_playerspawn.js";
+import { infoPlayerspawnUI, getPlayerspawnSpawnConfig, getActivePlayerspawnBlocks, applySpawnPointForPlayer, applyWorldSpawnPoint, getPlayerspawnTargets } from "./tool_ui/info_playerspawn.js";
 import { infoTargetAreaportalUI } from "./tool_ui/info_target_areaportal.js";
 import { gameNametagUI, getGameNametagTargets } from "./tool_ui/game_nametag.js";
 import { toolInvisibleUI, getHiddenPlaceholderType } from "./tool_ui/tool_invisible.js";
@@ -49,11 +49,45 @@ const LIGHT_BLOCK_TYPES = ["brr:tool_blocklight"];
 const ITEM_TO_BLOCK_MAP = {
     "brr:info_playerspawn": "brr:info_playerspawn_block",
     "brr:info_target_areaportal": "brr:info_target_areaportal_block",
-    "brr:game_nametag": "brr:game_nametag_block"
+    "brr:game_nametag": "brr:game_nametag_block",
+    "brr:logic_auto": "brr:logic_auto_block",
+    "brr:logic_branch": "brr:logic_branch_block",
+    "brr:logic_case": "brr:logic_case_block",
+    "brr:logic_compare": "brr:logic_compare_block",
+    "brr:logic_coop_manager": "brr:logic_coop_manager_block",
+    "brr:logic_random_outputs": "brr:logic_random_outputs_block",
+    "brr:logic_timer": "brr:logic_timer_block"
 };
 const MAX_SIZE = 28000;
 const TRIGGER_OUTPUT_TYPES = ["onTrue", "onFalse"];
 const TRIGGER_INPUTS = ["startDisabled", "selector", "destination", "destinationBlock", "targetFacingDirection", "worldSpawnAtBlock", "worldSpawn", "executeOnConditon", "triggerConditionValue1", "triggerConditionValue2", "triggerConditionValue3", "runCommand", "playerclipExcludeOperators", "playerclipExcludeGamemode", "playerclipExcludeSelector", "npcclipExcludeSelector", "worksInUsernames", "worksInChat", "suffix", "prefix", "nametag", "nametagOrder", "selectors"];
+const ADVENTURE_PERMISSION_MESSAGE_COOLDOWN_MS = 1000;
+const ADVENTURE_COMMAND_TO_KEY = {
+    can_use_pots: "canUsePots",
+    can_use_shelves: "canUseShelves",
+    can_use_trapdoors: "canUseTrapdoors",
+    can_use_doors: "canUseDoors",
+    can_use_itemframes: "canUseItemframes",
+    can_use_candles: "canUseCandles",
+    can_use_all: "canUseAll"
+};
+const ADVENTURE_KEY_TO_PROPERTY = {
+    canUsePots: "can_use_pots",
+    canUseShelves: "can_use_shelves",
+    canUseTrapdoors: "can_use_trapdoors",
+    canUseDoors: "can_use_doors",
+    canUseItemframes: "can_use_itemframes",
+    canUseCandles: "can_use_candles",
+    canUseAll: "can_use_all"
+};
+const ADVENTURE_BLOCKED_MESSAGES = {
+    canUsePots: "You cannot use flower pots right now.",
+    canUseShelves: "You cannot use shelves right now.",
+    canUseTrapdoors: "You cannot use trapdoors right now.",
+    canUseDoors: "You cannot use doors right now.",
+    canUseItemframes: "You cannot use item frames right now.",
+    canUseCandles: "You cannot use candles right now."
+};
 const ADJACENT_DIRECTIONS = [
     { x: 0, y: 1, z: 0 },
     { x: 0, y: -1, z: 0 },
@@ -62,6 +96,16 @@ const ADJACENT_DIRECTIONS = [
     { x: 1, y: 0, z: 0 },
     { x: -1, y: 0, z: 0 }
 ];
+const adventureInteractionMessageCooldowns = new Map();
+const adventureInteractionPermissions = {
+    canUsePots: true,
+    canUseShelves: true,
+    canUseTrapdoors: true,
+    canUseDoors: true,
+    canUseItemframes: true,
+    canUseCandles: true,
+    canUseAll: true
+};
 
 // SECTION: Block Grouping & Placement Helpers
 function getAdjacentPositions(x, y, z) {
@@ -125,15 +169,150 @@ function getActiveVisibleBlockTypes() {
 
 // SECTION: Player & Proximity Helpers
 function isPlayerInCreative(player) {
-    return player?.getGameMode?.() === GameMode.Creative;
+    if (!player) return false;
+
+    if (typeof player.getGameMode === "function") {
+        try {
+            return `${player.getGameMode()}`.toLowerCase() === "creative";
+        } catch { }
+    }
+
+    try {
+        return (player.runCommand("testfor @s[m=creative]")?.successCount ?? 0) > 0;
+    } catch { }
+
+    try {
+        return (player.runCommand("testfor @s[m=1]")?.successCount ?? 0) > 0;
+    } catch { }
+
+    return false;
 }
 
 function isPlayerOperator(player) {
-    return player?.playerPermissionLevel === PlayerPermissionLevel.Operator;
+    if (!player) return false;
+
+    try {
+        if (PlayerPermissionLevel) {
+            return player.playerPermissionLevel === PlayerPermissionLevel.Operator;
+        }
+    } catch { }
+
+    try {
+        return (player.runCommand("testfor @s[haspermission={operator=true}]")?.successCount ?? 0) > 0;
+    } catch { }
+
+    return false;
+}
+
+function isPlayerInAdventure(player) {
+    return player?.getGameMode?.() === GameMode.Adventure;
 }
 
 function getPlayerGameMode(player) {
-    return player?.getGameMode?.().toLowerCase() ?? "";
+    if (!player) return "";
+
+    if (typeof player.getGameMode === "function") {
+        try {
+            return `${player.getGameMode()}`.trim().toLowerCase();
+        } catch { }
+    }
+
+    const modeChecks = [
+        ["survival", "testfor @s[m=survival]", "testfor @s[m=0]"],
+        ["creative", "testfor @s[m=creative]", "testfor @s[m=1]"],
+        ["adventure", "testfor @s[m=adventure]", "testfor @s[m=2]"],
+        ["spectator", "testfor @s[m=spectator]", "testfor @s[m=6]"]
+    ];
+
+    for (const [modeName, ...tests] of modeChecks) {
+        for (const test of tests) {
+            try {
+                if ((player.runCommand(test)?.successCount ?? 0) > 0) {
+                    return modeName;
+                }
+            } catch { }
+        }
+    }
+
+    return "";
+}
+
+function persistAdventurePermissions() {
+    for (const [permissionKey, propertyId] of Object.entries(ADVENTURE_KEY_TO_PROPERTY)) {
+        world.setDynamicProperty(propertyId, adventureInteractionPermissions[permissionKey]);
+    }
+}
+
+function setAdventurePermission(permissionKey, enabled) {
+    const normalizedValue = !!enabled;
+
+    if (permissionKey === "canUseAll") {
+        adventureInteractionPermissions.canUsePots = normalizedValue;
+        adventureInteractionPermissions.canUseShelves = normalizedValue;
+        adventureInteractionPermissions.canUseTrapdoors = normalizedValue;
+        adventureInteractionPermissions.canUseDoors = normalizedValue;
+        adventureInteractionPermissions.canUseItemframes = normalizedValue;
+        adventureInteractionPermissions.canUseCandles = normalizedValue;
+        adventureInteractionPermissions.canUseAll = normalizedValue;
+        persistAdventurePermissions();
+        return;
+    }
+
+    if (!Object.prototype.hasOwnProperty.call(adventureInteractionPermissions, permissionKey)) return;
+
+    adventureInteractionPermissions[permissionKey] = normalizedValue;
+    adventureInteractionPermissions.canUseAll =
+        adventureInteractionPermissions.canUsePots
+        && adventureInteractionPermissions.canUseShelves
+        && adventureInteractionPermissions.canUseTrapdoors
+        && adventureInteractionPermissions.canUseDoors
+        && adventureInteractionPermissions.canUseItemframes
+        && adventureInteractionPermissions.canUseCandles;
+    persistAdventurePermissions();
+}
+
+function getAdventurePermissionForBlock(blockTypeId) {
+    const normalizedTypeId = `${blockTypeId ?? ""}`;
+    if (!normalizedTypeId) return undefined;
+
+    if (normalizedTypeId === "minecraft:flower_pot") return "canUsePots";
+    if (normalizedTypeId === "minecraft:chiseled_bookshelf" || normalizedTypeId === "minecraft:bookshelf") return "canUseShelves";
+    if (normalizedTypeId.endsWith("_trapdoor")) return "canUseTrapdoors";
+    if (normalizedTypeId.endsWith("_door")) return "canUseDoors";
+    if (normalizedTypeId.includes("_candle") || normalizedTypeId === "minecraft:candle") return "canUseCandles";
+
+    return undefined;
+}
+
+function getAdventurePermissionForEntityInteraction(entityTypeId) {
+    const normalizedTypeId = `${entityTypeId ?? ""}`;
+    if (!normalizedTypeId) return undefined;
+
+    if (normalizedTypeId === "minecraft:item_frame" || normalizedTypeId === "minecraft:glow_item_frame") {
+        return "canUseItemframes";
+    }
+
+    return undefined;
+}
+
+function shouldBlockAdventureInteraction(player, blockTypeId) {
+    if (!isPlayerInAdventure(player)) return false;
+
+    const permissionKey = getAdventurePermissionForBlock(blockTypeId);
+    if (!permissionKey) return false;
+
+    return !adventureInteractionPermissions[permissionKey];
+}
+
+function notifyAdventureInteractionBlocked(player, permissionKey) {
+    if (!player?.id || !permissionKey) return;
+
+    const now = Date.now();
+    const previous = adventureInteractionMessageCooldowns.get(player.id) ?? 0;
+    if (now - previous < ADVENTURE_PERMISSION_MESSAGE_COOLDOWN_MS) return;
+
+    adventureInteractionMessageCooldowns.set(player.id, now);
+    player.sendMessage(ADVENTURE_BLOCKED_MESSAGES[permissionKey] ?? "You cannot use that block right now.");
 }
 
 function isPositionNearBlock(pos, block, expand = 0.35) {
@@ -297,7 +476,35 @@ try {
             const registry = data?.customCommandRegistry;
             if (!registry) return;
 
-            const commandsList = ["engine_blocks_always_visible", "tools_enabled"];
+            emojiCommand(data);
+
+            const commandsList = [
+                "engine_blocks_always_visible",
+                "tools_enabled",
+                "can_use_pots",
+                "can_use_shelves",
+                "can_use_trapdoors",
+                "can_use_doors",
+                "can_use_itemframes",
+                "can_use_candles",
+                "can_use_all"
+            ];
+
+            function registerCommandAliases(baseConfig, callback, names) {
+                for (const name of names) {
+                    try {
+                        registry.registerCommand(
+                            {
+                                ...baseConfig,
+                                name
+                            },
+                            callback
+                        );
+                    } catch {
+                        // Skip duplicate alias registration.
+                    }
+                }
+            }
 
             registry.registerEnum("brr:cmds", commandsList);
             registry.registerCommand(
@@ -308,25 +515,83 @@ try {
                     mandatoryParameters: [
                         { name: "brr:cmds", type: CustomCommandParamType.Enum },
                         { name: "value", type: CustomCommandParamType.Boolean }
-                    ],
+                    ]
                 },
                 (origin, subcommand, value) => {
                     const sender = origin.sourceEntity;
                     if (!sender) return;
 
+                    const parsedBoolean = typeof value === "boolean" ? value : undefined;
+
                     if (subcommand === "engine_blocks_always_visible") {
-                        visible = value ?? false;
+                        if (parsedBoolean === undefined) {
+                            sender.sendMessage("§cInvalid value. Use true/false for engine_blocks_always_visible.");
+                            return;
+                        }
+
+                        visible = parsedBoolean;
                         world.setDynamicProperty("engine_blocks_always_visible", visible);
                         sender.sendMessage(`Toggled tool blocks visibility to ${visible}`);
                         return;
                     }
 
                     if (subcommand === "tools_enabled") {
-                        toolsEnabled = value ?? false;
+                        if (parsedBoolean === undefined) {
+                            sender.sendMessage("§cInvalid value. Use true/false for tools_enabled.");
+                            return;
+                        }
+
+                        toolsEnabled = parsedBoolean;
                         world.setDynamicProperty("tools_enabled", toolsEnabled);
                         sender.sendMessage(`Toggled tools to ${toolsEnabled}`);
+                        return;
+                    }
+
+                    const adventurePermissionKey = ADVENTURE_COMMAND_TO_KEY[subcommand];
+                    if (adventurePermissionKey) {
+                        if (parsedBoolean === undefined) {
+                            sender.sendMessage(`§cInvalid value. Use true/false for ${subcommand}.`);
+                            return;
+                        }
+
+                        setAdventurePermission(adventurePermissionKey, parsedBoolean);
+
+                        if (adventurePermissionKey === "canUseAll") {
+                            sender.sendMessage(`Set all adventure interaction permissions to ${parsedBoolean}.`);
+                            return;
+                        }
+
+                        sender.sendMessage(`Set ${subcommand} to ${parsedBoolean}.`);
                     }
                 }
+            );
+
+            registerCommandAliases(
+                {
+                    description: "Adjust chat cooldown in seconds",
+                    permissionLevel: CommandPermissionLevel.GameDirectors,
+                    mandatoryParameters: [
+                        { name: "cooldown_seconds", type: CustomCommandParamType.Float }
+                    ]
+                },
+                (origin, cooldownSeconds) => {
+                    const sender = origin.sourceEntity;
+                    if (!sender) return;
+
+                    const appliedSeconds = setChatCooldownSeconds(cooldownSeconds);
+                    if (appliedSeconds === undefined) {
+                        sender.sendMessage("§cInvalid value. Use a number >= 0 (examples: 0, 0.1, 1).");
+                        return;
+                    }
+
+                    const formattedSeconds = appliedSeconds
+                        .toFixed(3)
+                        .replace(/\.0+$/, "")
+                        .replace(/(\.\d*?)0+$/, "$1");
+
+                    sender.sendMessage(`§aChat cooldown set to ${formattedSeconds} second(s).`);
+                },
+                ["brr:adjust_chat_cooldown", "adjust_chat_cooldown"]
             );
         });
     }
@@ -335,6 +600,20 @@ try {
 system.run(() => {
     visible = parseBooleanLike(world.getDynamicProperty("engine_blocks_always_visible"), false);
     toolsEnabled = parseBooleanLike(world.getDynamicProperty("tools_enabled"), true);
+
+    adventureInteractionPermissions.canUsePots = parseBooleanLike(world.getDynamicProperty("can_use_pots"), true);
+    adventureInteractionPermissions.canUseShelves = parseBooleanLike(world.getDynamicProperty("can_use_shelves"), true);
+    adventureInteractionPermissions.canUseTrapdoors = parseBooleanLike(world.getDynamicProperty("can_use_trapdoors"), true);
+    adventureInteractionPermissions.canUseDoors = parseBooleanLike(world.getDynamicProperty("can_use_doors"), true);
+    adventureInteractionPermissions.canUseItemframes = parseBooleanLike(world.getDynamicProperty("can_use_itemframes"), true);
+    adventureInteractionPermissions.canUseCandles = parseBooleanLike(world.getDynamicProperty("can_use_candles"), true);
+    adventureInteractionPermissions.canUseAll =
+        adventureInteractionPermissions.canUsePots
+        && adventureInteractionPermissions.canUseShelves
+        && adventureInteractionPermissions.canUseTrapdoors
+        && adventureInteractionPermissions.canUseDoors
+        && adventureInteractionPermissions.canUseItemframes
+        && adventureInteractionPermissions.canUseCandles;
 });
 
 // SECTION: Named Target & Block Data Helpers
@@ -806,7 +1085,9 @@ system.runInterval(() => {
 
     if (setsPlayerSpawnPoint) {
         lastAppliedWorldSpawnKey = "";
-        for (const player of world.getPlayers()) {
+        const selector = `${activeBlock?.data?.selectors ?? "@a"}`.trim() || "@a";
+        const targetPlayers = getPlayerspawnTargets(activeBlock, selector, getSelectorRuntimeOptions());
+        for (const player of targetPlayers) {
             applySpawnPointForPlayer(player, spawnCoords, spawnDim);
         }
         return;
@@ -963,7 +1244,16 @@ world.afterEvents.playerSpawn.subscribe((event) => {
 
         const activeBlock = activePlayerspawnBlocks[0];
         const spawnConfig = getPlayerspawnSpawnConfig(activeBlock, parseBooleanLike);
-        if (!spawnConfig || spawnConfig.setsPlayerSpawnPoint) return;
+        if (!spawnConfig) return;
+
+        if (spawnConfig.setsPlayerSpawnPoint) {
+            const selector = `${activeBlock?.data?.selectors ?? "@a"}`.trim() || "@a";
+            const targets = getPlayerspawnTargets(activeBlock, selector, getSelectorRuntimeOptions());
+            if (targets.some(target => `${target?.id ?? ""}` === `${player?.id ?? ""}`)) {
+                applySpawnPointForPlayer(player, spawnConfig.spawnCoords, spawnConfig.spawnDim);
+            }
+            return;
+        }
 
         try {
             player.teleport(spawnConfig.spawnCoords, { dimension: spawnConfig.spawnDim });
@@ -975,7 +1265,16 @@ world.afterEvents.playerSpawn.subscribe((event) => {
 const lastTrigger = new Map();
 
 world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
+    if (data.cancel) return;
+
     const block = data.block;
+    const blockedPermission = getAdventurePermissionForBlock(block?.typeId);
+    if (blockedPermission && shouldBlockAdventureInteraction(data.player, block.typeId)) {
+        data.cancel = true;
+        notifyAdventureInteractionBlocked(data.player, blockedPermission);
+        return;
+    }
+
     if (TOOL_BLOCK_TYPES.includes(block.typeId)) {
         if (!toolsEnabled) {
             return;
@@ -1019,9 +1318,21 @@ world.beforeEvents.playerInteractWithBlock.subscribe((data) => {
     }
 })
 
+world.beforeEvents.playerInteractWithEntity.subscribe((data) => {
+    if (data.cancel) return;
 
-// hh
+    const player = data.player;
+    if (!isPlayerInAdventure(player)) return;
 
+    const blockedPermission = getAdventurePermissionForEntityInteraction(data?.target?.typeId);
+    if (!blockedPermission) return;
+    if (adventureInteractionPermissions[blockedPermission]) return;
+
+    data.cancel = true;
+    notifyAdventureInteractionBlocked(player, blockedPermission);
+});
+
+// SECTION: Tripmine Runtime Events
 world.afterEvents.playerPlaceBlock.subscribe((data) => {
     const blockId = data.block.typeId
     if (blockId === "brr:subspace_tripmine_block") {

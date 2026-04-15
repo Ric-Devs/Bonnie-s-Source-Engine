@@ -3,6 +3,12 @@ import { world } from "@minecraft/server";
 import { outputClassInfoTargets, outputTypes, getOutputTargetLabel, isOutputTargetSupportedByBlockType } from "./output_ci_targets.js";
 import { addDecorativeSection, addReadOnlyListSection } from "./ui_formatting.js";
 
+function normalizeLiteralSelector(value) {
+    const raw = `${value ?? ""}`.trim();
+    const quoted = raw.match(/^(["'])(.*)\1$/);
+    return `${quoted ? quoted[2] : raw}`.trim().toLowerCase();
+}
+
 // SECTION: Game Nametag Runtime Helpers
 export function getGameNametagTargets(block, selectorRaw, options) {
     const selector = `${selectorRaw ?? "@a"}`.trim();
@@ -47,11 +53,18 @@ export function getGameNametagTargets(block, selectorRaw, options) {
         return [];
     }
 
-    if (normalized === "minecraft:player") {
-        return Array.from(dimension.getPlayers());
+    const literal = normalizeLiteralSelector(selector);
+    const players = Array.from(dimension.getPlayers());
+
+    if (literal === "minecraft:player") {
+        return players;
     }
 
-    return [];
+    return players.filter(player => {
+        const playerName = normalizeLiteralSelector(player?.name);
+        const playerTag = normalizeLiteralSelector(player?.nameTag);
+        return playerName === literal || playerTag === literal;
+    });
 }
 
 // SECTION: Game Nametag UI Data Helpers

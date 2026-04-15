@@ -2,6 +2,7 @@ import { world, system, EntityDamageCause } from "@minecraft/server";
 import { renderGluonBeamVisual } from "./gluon_beam_visual.js";
 import { consumeAmmo, getAmmoRemaining, playEmptySound } from "./ammo_system.js";
 
+// SECTION: Tau Constants
 const TAU_ITEM_ID = "brr:tau_cannon";
 const TAU_AURA_PARTICLE = "brr:tau_beam_aura";
 const TAU_CORE_PARTICLE = "brr:tau_beam_core";
@@ -25,7 +26,6 @@ const TAU_OVERLOAD_SOUND = "weapons.gauss.overcharged";
 const TAU_CHARGED_READY_SOUND = "weapons.gauss.charged";
 
 const LEFT_CLICK_DAMAGE = 3;
-const LEFT_CLICK_COOLDOWN_TICKS = 4;
 const RIGHT_CLICK_COOLDOWN_TICKS = 10;
 const RIGHT_CLICK_HOLD_THRESHOLD_TICKS = 10;
 const RIGHT_CLICK_TAP_MIN_TICKS = 2;
@@ -52,11 +52,13 @@ const TAP_AMMO_COST = 2;
 const CHARGE_AMMO_CAP = 18;
 const CHARGE_AMMO_RAMP_TICKS = 60;
 
+// SECTION: Tau Runtime State
 const rightClickCooldownByPlayer = new Map();
 const pendingUseByPlayer = new Map();
 const interactionSuppressUntilTickByPlayer = new Map();
 const chargeStateByPlayer = new Map();
 
+// SECTION: Shared Helpers
 function getCurrentTick() {
     try {
         const tick = Number(system?.currentTick);
@@ -129,6 +131,7 @@ function playRandomSound(player, soundPool) {
     playSoundForPlayer(player, soundPool[randomIndex] ?? soundPool[0]);
 }
 
+// SECTION: Beam Math and Targeting
 function clamp(value, minValue, maxValue) {
     return Math.min(maxValue, Math.max(minValue, value));
 }
@@ -315,6 +318,8 @@ function findEntityHit(shooter, origin, direction, maxDistance) {
 
     return closestHit;
 }
+
+// SECTION: Beam Damage and Recoil
 
 function applyBeamDamage(shooter, target, amount) {
     if (!shooter?.id || !target?.id) return;
@@ -539,6 +544,8 @@ function applyChargedRecoilKnockback(player, trace, chargedDamage) {
     });
 }
 
+// SECTION: Charge and Fire Helpers
+
 function getHealthSnapshot(player) {
     try {
         const health = player.getComponent("minecraft:health");
@@ -706,6 +713,7 @@ function finalizeRightClickUse(player) {
     triggerTapPrimaryFire(player, tick);
 }
 
+// SECTION: Event Wiring
 function subscribeAfterEvent(signalName, callback) {
     try {
         const signal = world.afterEvents?.[signalName];
@@ -768,6 +776,7 @@ subscribeAfterEvent("itemStopUse", (eventData) => {
     finalizeRightClickUse(player);
 });
 
+// SECTION: Runtime Tick
 system.runInterval(() => {
     const tick = getCurrentTick();
     const onlinePlayers = new Map();

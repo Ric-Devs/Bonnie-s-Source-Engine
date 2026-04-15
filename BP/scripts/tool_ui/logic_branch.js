@@ -3,8 +3,10 @@ import { addDecorativeSection } from "./ui_formatting.js";
 import { conditionTools } from "./conditions_tools.js";
 import { buildOutputSection, buildExistingOutputsSection, buildInputsSection, parseOutputResponse } from "./shared_output_ui.js";
 
+// SECTION: Output Definitions
 export const LOGIC_BRANCH_OUTPUT_TYPES = ["onTrue", "onFalse"];
 
+// SECTION: Logic Branch UI
 export function logicBranchUI(player, blockEntry, options) {
 	const { onSave, getNamedTargetEntries, getBlocksTargetingCurrent, allInputs, validateConditionRequirements } = options;
 	if (!blockEntry.data) blockEntry.data = {};
@@ -39,6 +41,7 @@ export function logicBranchUI(player, blockEntry, options) {
 
 	form.submitButton("Save");
 
+	// SECTION: Form Submission Handling
 	form.show(player).then((response) => {
 		if (response.canceled) return;
 		const formValues = (response.formValues ?? []).filter(v => v !== undefined && v !== null);
