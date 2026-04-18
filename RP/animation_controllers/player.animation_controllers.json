@@ -14,10 +14,10 @@
         "gluon_gun": {
           "animations": [
             {
-              "gluon_gun_fp_controller": "c.is_first_person"
+              "gluon_gun_fp_controller": "variable.is_first_person"
             },
             {
-              "gluon_gun_tp_controller": "!c.is_first_person"
+              "gluon_gun_tp_controller": "!variable.is_first_person"
             }
           ],
           "transitions": [
