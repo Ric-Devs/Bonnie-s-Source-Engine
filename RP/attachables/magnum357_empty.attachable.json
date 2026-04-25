@@ -15,8 +15,8 @@
         "default": "geometry.magnum357"
       },
       "animations": {
-        "fp_controller": "controller.animation.magnum357.firstPerson",
-        "tp_controller": "controller.animation.magnum357.thirdPerson",
+        "fp_controller": "controller.animation.magnum357.emptyFirstPerson",
+        "tp_controller": "controller.animation.magnum357.emptyThirdPerson",
         "fp_idle": "animation.magnum357.fp_idle",
         "fp_draw": "animation.magnum357.fp_draw",
         "fp_draw_admire": "animation.magnum357.fp_draw_admire_clean",
