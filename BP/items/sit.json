@@ -5,7 +5,8 @@
       "identifier": "brr:sit",
       "menu_category": {
         "category": "none",
-        "is_hidden_in_commands": false
+        "is_hidden_in_commands": false,
+        "group": "itemGroup.name.cutiepie"
       }
     },
     "components": {

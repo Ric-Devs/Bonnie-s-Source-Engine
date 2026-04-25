@@ -4,8 +4,9 @@
     "description": {
       "identifier": "brr:collar",
       "menu_category": {
-        "category": "none",
-        "is_hidden_in_commands": false
+        "category": "equipment",
+        "is_hidden_in_commands": false,
+        "group": "itemGroup.name.cutiepie"
       }
     },
     "components": {

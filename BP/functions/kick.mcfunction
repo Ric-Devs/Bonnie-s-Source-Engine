@@ -10,6 +10,7 @@ kick "Brayden657764" "You have been terminated from any BRR produced experience 
 kick "JumpingVoyage03" "You have been terminated from any BRR produced experience for unwanted advertisement - Date: 16.3.2026 18:35 GMT+2 - BRR TECH"
 kick "doctormerra99" "You have been terminated from any BRR produced experience for immature behaviour- Date: 17.3.2026 17:03 GMT+2 - BRR TECH"
 kick "FawnCornet45237" "You have been terminated from any BRR produced experience for unwanted advertisement - Date: 19.3.2026 21:04 GMT+2 - BRR TECH"
-
+kick "Snowfox2924" "You have been terminated from any BRR produced experience for being a crybaby - Date: 07.4.2026 17:18 GMT+2 - BRR TECH"
+kick "raki rush" "you have been terminated from any BRR produced experience - Date: 08.4.2026 0:32 GMT+2 - BRR TECH"
 # threats such as bots and chat flooders who lag the world
 kick "JNHG" "You have been terminated from any BRR produced experience for attempted world nuking thru chat spam - Date: 22.3.2026 18:03 GMT+2 - BRR TECH"
