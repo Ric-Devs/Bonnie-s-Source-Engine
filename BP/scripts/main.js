@@ -34,6 +34,7 @@ import {
     notifyAdventureInteractionBlocked,
     isPlayerInAdventure
 } from "./handler/permissions.js";
+import "./antiexploit.js";
 
 const { world, system } = mc;
 const GameMode = mc.GameMode;
